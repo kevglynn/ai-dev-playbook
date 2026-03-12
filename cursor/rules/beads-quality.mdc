@@ -1,0 +1,63 @@
+---
+description: Standards for creating and closing beads — every bead must be self-contained with ACs, and every close must include evidence.
+alwaysApply: true
+---
+
+# Bead Quality Standards
+
+Every bead must be self-contained — a developer picking it up cold, without scratchpad or chat history, should have everything needed to understand, implement, and verify the work.
+
+## Required in every bead
+
+### Description (`--description`)
+
+- **What** the problem or feature is (not just the title restated)
+- **Where** in the codebase it applies (files, modules, or components)
+- **How** to approach the implementation (concrete steps, not vague direction)
+- **Why** it matters (context on the motivation or user impact)
+
+### Acceptance Criteria (`--acceptance`)
+
+Required for **bug**, **feature**, and **task** beads. Use `bd create --acceptance "..."`.
+
+- Bullet points using behavioral language (should/shows/returns/renders)
+- Describe **observable outcomes**, not implementation steps
+- "Loading indicator appears" is an AC. "Add isLoading state variable" is not.
+
+### Non-goals (recommended for feature beads)
+
+Add a "Non-goals:" line in the description to prevent agent scope creep. State what this bead is explicitly NOT doing.
+
+## Validation
+
+Run `bd lint` to check open beads for missing required sections. It enforces ACs on bug/feature/task types.
+
+## Example
+
+```bash
+# BAD — no ACs, no non-goals, description restates title
+bd create "Fix loading state" -t bug -p 1
+
+# GOOD — self-contained with ACs and non-goals
+bd create "Add loading indicators to beads-ui tab switching" \
+  --description="When switching tabs in beads-ui, the UI shows 'No issues' while data loads — indistinguishable from an empty workspace. Track subscription state in subscription-issue-store. Render spinner while loading. Files: src/client/subscription-issue-store.js, src/client/views/*.js. Non-goals: not changing the subscription protocol or server-side caching in this bead." \
+  --acceptance="Switching to an unloaded tab shows a loading indicator, not 'No issues'. Tab with zero real issues still shows 'No issues' after load completes. Loading indicator disappears within 1s of data arriving." \
+  -t feature -p 1
+```
+
+## When closing beads
+
+Always include a `--reason` with `bd close` that maps to the acceptance criteria:
+
+- **Bug/feature beads:** Test output showing ACs are satisfied, or manual verification notes per AC
+- **Refactor beads:** Build/lint clean, existing tests still pass
+- **Chore/config/docs:** Brief summary of what was done; "N/A — no verification needed" is acceptable
+- Reference commit hash, branch name, or PR URL
+
+```bash
+# BAD — vague
+bd close gastown-abc --reason "Done"
+
+# GOOD — evidence mapped to ACs
+bd close gastown-abc --reason "Commit a1b2c3f on feature/loading-ux. AC1: spinner renders on tab switch (verified manually). AC2: empty state shows after load (test_empty_tab passes). AC3: spinner gone <1s (verified manually)."
+```

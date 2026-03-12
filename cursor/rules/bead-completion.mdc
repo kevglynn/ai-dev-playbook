@@ -1,0 +1,45 @@
+---
+description: How agents pick up, verify, and close beads — JIT verification, self-review against ACs, and evidence policy.
+alwaysApply: true
+---
+
+# Bead Completion Standards
+
+## When picking up a bead — JIT verification
+
+Before writing any code, verify that the bead's description matches reality:
+
+- Do the files and paths mentioned still exist?
+- Do the APIs, interfaces, or patterns described still match the current codebase?
+- Has anything changed since the bead was created that affects the approach?
+
+If reality doesn't match: update the implementation approach. **Never modify the acceptance criteria** — those are owned by the Planner. Note the discrepancy and proceed with the adjusted approach.
+
+## AC ownership
+
+- **The Planner writes acceptance criteria** at bead creation time.
+- **The Executor does not modify ACs.** If an AC is wrong, obsolete, or impossible given the current codebase, mark the bead blocked and escalate to the Planner for an AC update. Do not silently reinterpret or skip ACs.
+
+## Before declaring done — self-review
+
+The same agent that did the work performs a focused review pass:
+
+1. Re-read each acceptance criterion from the bead (`bd show <id>`)
+2. For each AC, verify it is satisfied by the code as written
+3. If any AC is not met, fix it or escalate — do not declare done
+
+This is not a separate subagent or reviewer. It's a deliberate pause by the implementing agent to check its own work against the spec.
+
+## Evidence policy — what to include in `bd close --reason`
+
+Every close reason must include evidence mapped to acceptance criteria:
+
+| Bead type | Required evidence |
+|-----------|------------------|
+| Bug | Test output showing bug is reproduced and fixed |
+| Feature | Test output or manual verification notes per AC |
+| Refactor | Build/lint clean, existing behavioral tests pass |
+| Chore/config | Brief summary of what was done |
+| Docs | "N/A — documentation update, no verification needed" |
+
+See `beads-quality.mdc` for close reason format and examples.
