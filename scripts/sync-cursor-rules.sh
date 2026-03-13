@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Sync workflow .mdc rules from ai-dev-playbook (canonical source) to target repos.
+# Sync workflow .mdc rules from ai-dev-playbook (canonical source) to target
+# repos AND their git worktrees.
 # Usage: ./scripts/sync-cursor-rules.sh
 # Edit canonical rules in cursor/rules/, then run this to distribute.
 
@@ -23,16 +24,35 @@ FILES=(
   "worktree-awareness.mdc"
 )
 
-for target in "${TARGETS[@]}"; do
-  if [[ ! -d "$target" ]]; then
-    mkdir -p "$target"
-    echo "Created $target"
-  fi
+sync_rules_to() {
+  local dest="$1"
+  mkdir -p "$dest"
   for f in "${FILES[@]}"; do
-    cp "$SRC/$f" "$target/$f"
+    cp "$SRC/$f" "$dest/$f"
   done
-  echo "Synced → $(dirname "$(dirname "$target")")"
+}
+
+repo_count=0
+wt_count=0
+
+for target in "${TARGETS[@]}"; do
+  sync_rules_to "$target"
+  repo_count=$((repo_count + 1))
+  repo_root="$(cd "$(dirname "$target")/.." && pwd)"
+  echo "Synced → $repo_root"
+
+  # Discover and sync to worktrees for this repo
+  if [ -d "$repo_root/.git" ] || [ -f "$repo_root/.git" ]; then
+    while IFS= read -r line; do
+      wt_path="${line#worktree }"
+      [ "$wt_path" = "$repo_root" ] && continue
+      wt_rules="$wt_path/.cursor/rules"
+      sync_rules_to "$wt_rules"
+      wt_count=$((wt_count + 1))
+      echo "  ↳ worktree: $(basename "$wt_path")"
+    done < <(git -C "$repo_root" worktree list --porcelain 2>/dev/null | grep '^worktree ')
+  fi
 done
 
 echo ""
-echo "Done. ${#FILES[@]} rules synced to ${#TARGETS[@]} repos."
+echo "Done. ${#FILES[@]} rules → $repo_count repos + $wt_count worktrees."
