@@ -13,6 +13,7 @@ Canonical `.mdc` rule files for Cursor projects. These are the source of truth â
 | `pragmatic-tdd.mdc` | Signal-first TDD by bead type, zero-signal test taxonomy |
 | `bead-completion.mdc` | JIT verification, self-review against ACs, AC ownership protocol |
 | `design-docs.mdc` | When to create committed specs (3+ beads or high-risk areas) |
+| `worktree-awareness.mdc` | Git worktree isolation: commit-early discipline, beads DB per-worktree, no false fabrication claims |
 
 ### `cursor/settings-ui/`
 Backup of user-level Cursor Settings UI rules. These apply globally across all projects.

@@ -1,0 +1,46 @@
+# Worktree Awareness
+
+## Git worktrees are isolated
+
+Each Cursor worktree is a separate checkout of the same repo. They share the git object store but have **independent working directories**. This has consequences agents must understand:
+
+- **Untracked/uncommitted files in worktree A do not exist in worktree B.** This is not a bug — it's how git works. A file created but not committed in one worktree is invisible to every other worktree.
+- **Staged but uncommitted changes are also invisible** across worktrees.
+- **Only committed content is shared** (after the other worktree checks out or pulls that commit).
+
+## Do not accuse fabrication
+
+If you're reviewing work and a referenced file "doesn't exist," **check whether you're in a different worktree** before concluding the file was never created. The most common explanation is worktree isolation, not fabrication.
+
+Before reporting missing files:
+1. Confirm which worktree you're in (`git rev-parse --show-toplevel`)
+2. Check whether the file might exist in the worktree where the work was done
+3. Check `git log --all --oneline -- <path>` to see if the file was committed on any branch
+
+## Commit artifacts early
+
+If other agents or reviewers need to see your work:
+- **Commit deliverables immediately**, even as drafts — `git add <file> && git commit -m "wip: <description>"`
+- Do not wait until work is "done" to commit. Uncommitted files are invisible to collaborators in other worktrees.
+- Spec files, runbooks, and design docs especially — these are useless if only you can see them.
+
+## Beads DB is per-worktree
+
+Each worktree has its own `.beads/` directory with its own Dolt server instance. This means:
+- `bd list` in worktree A shows different state than `bd list` in worktree B
+- A bead created in one worktree does not automatically appear in another
+- "Database not found" errors usually mean `bd init` was never run in that worktree
+
+If beads state is critical for a handoff, note the worktree path and bead IDs explicitly. Do not assume the recipient can query the same bead DB.
+
+## Worktree checklist
+
+When starting work in a worktree:
+- [ ] Confirm `.cursor/rules/` has the expected rule files
+- [ ] Confirm `bd list` works (run `bd init` if not)
+- [ ] Pull latest from the branch you need (`git pull` or `git checkout <branch>`)
+
+When handing off or requesting review:
+- [ ] Commit all artifacts the reviewer needs to see
+- [ ] Note which worktree path the work lives in
+- [ ] If beads were created/updated, note the bead IDs and worktree

@@ -20,6 +20,7 @@ FILES=(
   "pragmatic-tdd.mdc"
   "bead-completion.mdc"
   "design-docs.mdc"
+  "worktree-awareness.mdc"
 )
 
 for target in "${TARGETS[@]}"; do
