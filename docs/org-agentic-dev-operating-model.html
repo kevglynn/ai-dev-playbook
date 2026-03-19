@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI-Native Engineering Operating Model — Kevin Glynn</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-0: #0a0b10;
+      --bg-1: #10131f;
+      --bg-2: #171c2e;
+      --ink: #edf2ff;
+      --ink-dim: #9eabc4;
+      --cyan: #5ceaff;
+      --violet: #b48eff;
+      --amber: #ffcb57;
+      --green: #5cf0a8;
+      --red: #ff6b7a;
+      --card: rgba(255,255,255,0.04);
+      --card-hover: rgba(255,255,255,0.07);
+      --border: rgba(255,255,255,0.1);
+      --border-bright: rgba(255,255,255,0.2);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: var(--bg-0);
+      color: var(--ink);
+      font-family: "DM Sans", system-ui, sans-serif;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .deck {
+      width: 100vw; height: 100vh;
+      position: relative;
+      background:
+        radial-gradient(ellipse at 80% -20%, rgba(180,142,255,0.15), transparent 50%),
+        radial-gradient(ellipse at 15% 110%, rgba(92,234,255,0.1), transparent 50%),
+        var(--bg-0);
+    }
+
+    .slide {
+      position: absolute; inset: 0;
+      padding: 5vh 6vw 4vh;
+      display: flex; flex-direction: column;
+      opacity: 0;
+      transform: translateY(12px);
+      pointer-events: none;
+      transition: opacity 280ms ease, transform 280ms ease;
+    }
+    .slide.active {
+      opacity: 1; transform: none; pointer-events: auto;
+    }
+
+    .kicker {
+      font-family: "Syne", sans-serif;
+      font-size: clamp(0.7rem, 1vw, 0.85rem);
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      margin-bottom: 0.6rem;
+    }
+
+    h1 {
+      font-family: "Syne", sans-serif;
+      font-size: clamp(2.4rem, 4.8vw, 4.4rem);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -0.01em;
+      margin-bottom: 0.5rem;
+    }
+
+    h2 {
+      font-family: "Syne", sans-serif;
+      font-size: clamp(1.6rem, 3vw, 2.8rem);
+      font-weight: 700;
+      line-height: 1.12;
+      margin-bottom: 0.5rem;
+      max-width: 900px;
+    }
+
+    .subtitle {
+      font-size: clamp(1rem, 1.4vw, 1.3rem);
+      color: var(--ink-dim);
+      line-height: 1.5;
+      max-width: 780px;
+    }
+
+    .body { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 1.2rem; }
+
+    ul { list-style: none; padding: 0; display: grid; gap: 0.6rem; max-width: 880px; }
+    li {
+      font-size: clamp(1rem, 1.35vw, 1.2rem);
+      line-height: 1.45;
+      padding-left: 1.6rem;
+      position: relative;
+    }
+    li::before {
+      content: "";
+      position: absolute; left: 0; top: 0.55em;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--cyan);
+      opacity: 0.7;
+    }
+
+    b, strong { color: var(--ink); font-weight: 700; }
+    .c { color: var(--cyan); }
+    .v { color: var(--violet); }
+    .a { color: var(--amber); }
+    .g { color: var(--green); }
+    .r { color: var(--red); }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0.75rem;
+      max-width: 1050px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1rem 1.1rem 0.9rem;
+      transition: background 200ms;
+    }
+    .card:hover { background: var(--card-hover); }
+    .card h3 {
+      font-family: "Syne", sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.35rem;
+    }
+    .card p { font-size: 0.92rem; color: var(--ink-dim); line-height: 1.4; }
+
+    .confidence {
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-top: 0.4rem;
+    }
+    .conf-high { background: rgba(92,240,168,0.15); color: var(--green); }
+    .conf-med { background: rgba(255,203,87,0.15); color: var(--amber); }
+    .conf-open { background: rgba(180,142,255,0.15); color: var(--violet); }
+
+    .flow {
+      display: flex; flex-wrap: wrap; gap: 0.5rem;
+      align-items: center; max-width: 1050px;
+    }
+    .flow-node {
+      padding: 0.5rem 0.8rem;
+      border-radius: 10px;
+      border: 1px solid var(--border-bright);
+      background: rgba(255,255,255,0.03);
+      font-weight: 700; font-size: 0.85rem;
+      text-align: center;
+    }
+    .flow-arr { color: var(--amber); font-weight: 800; font-size: 1.1rem; }
+
+    .callout {
+      background: rgba(92,234,255,0.06);
+      border-left: 3px solid var(--cyan);
+      padding: 0.8rem 1rem;
+      border-radius: 0 10px 10px 0;
+      max-width: 780px;
+      font-size: 1.02rem;
+      line-height: 1.45;
+      color: var(--ink);
+    }
+    .callout-amber {
+      background: rgba(255,203,87,0.06);
+      border-left-color: var(--amber);
+    }
+    .callout-violet {
+      background: rgba(180,142,255,0.06);
+      border-left-color: var(--violet);
+    }
+
+    .cmp {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      max-width: 800px;
+    }
+    .cmp-col {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1rem 1.1rem;
+    }
+    .cmp-col h3 {
+      font-family: "Syne", sans-serif;
+      font-size: 1rem; font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .cmp-col ul { gap: 0.35rem; }
+    .cmp-col li { font-size: 0.92rem; }
+    .cmp-col li::before { width: 6px; height: 6px; top: 0.55em; }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.75rem;
+      max-width: 1050px;
+    }
+
+    .title-meta {
+      margin-top: 1.4rem;
+      font-size: 1.05rem;
+      color: var(--ink-dim);
+    }
+    .title-tags {
+      display: flex; flex-wrap: wrap; gap: 0.4rem;
+      margin-top: 1rem;
+    }
+    .tag {
+      padding: 0.3rem 0.65rem;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #c5d0e8;
+    }
+
+    .foot {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 0.6rem;
+      font-size: 0.82rem;
+      color: #6b7a96;
+    }
+    .progress-track {
+      width: 120px; height: 3px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 3px; overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--cyan);
+      border-radius: 3px;
+      transition: width 300ms ease;
+    }
+    .nav-hint { opacity: 0.6; }
+
+    .num {
+      font-family: "Syne", sans-serif;
+      font-size: 3.5rem;
+      font-weight: 800;
+      line-height: 1;
+      opacity: 0.15;
+      position: absolute;
+      top: 5vh; right: 6vw;
+    }
+  </style>
+</head>
+<body>
+<main class="deck" id="deck">
+
+  <!-- S1: TITLE -->
+  <section class="slide active">
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center">
+      <div class="kicker">For Leadership</div>
+      <h1>AI-Native Engineering<br>Operating Model</h1>
+      <p class="subtitle">A concrete framework for scaling agentic development from 1 developer to 50 &mdash; with honest confidence levels on every piece.</p>
+      <p class="title-meta">Kevin Glynn &middot; Pryon &middot; March 2026</p>
+      <div class="title-tags">
+        <span class="tag">6 Design Decisions</span>
+        <span class="tag">3-Month &amp; 12-Month</span>
+        <span class="tag">Pilot Plan</span>
+        <span class="tag">Tool-Agnostic</span>
+        <span class="tag">Multi-Repo</span>
+      </div>
+    </div>
+    <div class="foot">
+      <span></span>
+      <span class="nav-hint">&larr; &rarr; or click to navigate</span>
+    </div>
+  </section>
+
+  <!-- S2: THE REFRAME -->
+  <section class="slide">
+    <div class="kicker">The Reframe</div>
+    <h2>This is an <span class="c">operating model</span> change, not a tool rollout</h2>
+    <div class="body">
+      <ul>
+        <li>AI coding assistants are commoditizing. <strong>Cursor, Claude Code, Copilot, Windsurf</strong> &mdash; the tool doesn't matter as much as the system around it.</li>
+        <li>The hard problems are <strong>coordination, quality, and visibility</strong> &mdash; not code generation.</li>
+        <li>What follows is a framework: <strong>6 design decisions</strong> that define how 50 developers work with agents.</li>
+        <li>Each decision has a <span class="g">3-month answer</span> (deploy now) and a <span class="v">12-month answer</span> (scale to).</li>
+      </ul>
+      <div class="callout">
+        Some of these are well-tested from my daily workflow. Others are hypotheses a pilot would validate. I'll be honest about which is which.
+      </div>
+    </div>
+    <div class="foot">
+      <span>Why this matters</span>
+      <div class="progress-track"><div class="progress-fill" style="width:7%"></div></div>
+    </div>
+  </section>
+
+  <!-- S3: DECISION 1 — DECOMPOSITION -->
+  <section class="slide">
+    <div class="num">01</div>
+    <div class="kicker">Decision 1 of 6</div>
+    <h2><span class="c">Decomposition</span> &mdash; how work gets broken down</h2>
+    <div class="body">
+      <ul>
+        <li><strong>Two-tier decomposition.</strong> Product/tech leads define epics and stories in Jira (human-sized). Developers break stories into agent-sized work units with explicit acceptance criteria.</li>
+        <li>Shared templates and rules keep granularity consistent across 50 devs.</li>
+        <li>The agent-level units are <strong>beads</strong> &mdash; structured work items with ACs, dependencies, and persistent state.</li>
+      </ul>
+      <div class="cmp">
+        <div class="cmp-col">
+          <h3 style="color:var(--green)">3 Months</h3>
+          <ul>
+            <li>Developers decompose their own stories</li>
+            <li>Shared bead templates + Cursor rules</li>
+            <li>Manual quality checks on decomposition</li>
+          </ul>
+        </div>
+        <div class="cmp-col">
+          <h3 style="color:var(--violet)">12 Months</h3>
+          <ul>
+            <li>Agents propose decomposition from story</li>
+            <li>Human approves/adjusts the breakdown</li>
+            <li>Automated quality gates on bead structure</li>
+          </ul>
+        </div>
+      </div>
+      <span class="confidence conf-high">Confidence: High &mdash; this is how I work daily</span>
+    </div>
+    <div class="foot">
+      <span>Decomposition</span>
+      <div class="progress-track"><div class="progress-fill" style="width:14%"></div></div>
+    </div>
+  </section>
+
+  <!-- S4: DECISION 2 — ASSIGNMENT -->
+  <section class="slide">
+    <div class="num">02</div>
+    <div class="kicker">Decision 2 of 6</div>
+    <h2><span class="c">Assignment</span> &mdash; how work gets assigned</h2>
+    <div class="body">
+      <ul>
+        <li>Stories assigned to developers through the <strong>normal Jira process</strong>. No change there.</li>
+        <li>Within a story, the developer uses their agent to plan and execute sub-tasks.</li>
+        <li>The agent picks the <strong>next unblocked task</strong>, implements it test-first, and self-checks against acceptance criteria before submitting.</li>
+      </ul>
+      <div class="cmp">
+        <div class="cmp-col">
+          <h3 style="color:var(--green)">3 Months</h3>
+          <ul>
+            <li>1 developer : 1 agent session</li>
+            <li>Developer drives task selection</li>
+            <li>Agent executes within guardrails</li>
+          </ul>
+        </div>
+        <div class="cmp-col">
+          <h3 style="color:var(--violet)">12 Months</h3>
+          <ul>
+            <li>Orchestration layer assigns to multiple agents</li>
+            <li>Developer monitors a fleet, not a single session</li>
+            <li>Stuck-agent detection and recovery</li>
+          </ul>
+        </div>
+      </div>
+      <span class="confidence conf-high">Confidence: High &mdash; proven in my workflow, no new infrastructure</span>
+    </div>
+    <div class="foot">
+      <span>Assignment</span>
+      <div class="progress-track"><div class="progress-fill" style="width:21%"></div></div>
+    </div>
+  </section>
+
+  <!-- S5: DECISION 3 — COHERENCE -->
+  <section class="slide">
+    <div class="num">03</div>
+    <div class="kicker">Decision 3 of 6</div>
+    <h2><span class="a">Coherence</span> &mdash; how pieces stay consistent</h2>
+    <div class="body">
+      <p class="subtitle" style="margin-bottom:0.4rem"><strong>This is the hardest question.</strong> The 3-month answer isn't better agents &mdash; it's shared guardrails.</p>
+      <ul>
+        <li><strong>Cursor rules</strong> that enforce coding patterns, naming, test discipline.</li>
+        <li><strong>Design docs</strong> for any work touching 3+ components or high-risk areas.</li>
+        <li>Clear <strong>branch/integration strategy</strong> so separately-built pieces merge cleanly.</li>
+      </ul>
+      <div class="callout callout-amber">
+        Consistency comes from the operating model, not from hoping everyone prompts well. The mechanism works at individual scale &mdash; distributing and enforcing shared rules across 50 devs is the design problem to solve early.
+      </div>
+      <span class="confidence conf-med">Confidence: Medium &mdash; works at individual scale, org distribution is the open question</span>
+    </div>
+    <div class="foot">
+      <span>Coherence</span>
+      <div class="progress-track"><div class="progress-fill" style="width:29%"></div></div>
+    </div>
+  </section>
+
+  <!-- S6: DECISION 4 — TESTING -->
+  <section class="slide">
+    <div class="num">04</div>
+    <div class="kicker">Decision 4 of 6</div>
+    <h2><span class="c">Testing</span> &mdash; verification at each level</h2>
+    <div class="body">
+      <div class="grid-3">
+        <div class="card" style="border-color:rgba(92,240,168,0.3)">
+          <h3 style="color:var(--green)">Layer A: Bead-Level</h3>
+          <p>Agent writes unit tests for each sub-task. Enforced by Cursor rules. Test-first for bugs and features.</p>
+          <span class="confidence conf-high">Proven</span>
+        </div>
+        <div class="card" style="border-color:rgba(255,203,87,0.3)">
+          <h3 style="color:var(--amber)">Layer B: Story-Level</h3>
+          <p>CI runs integration tests on every PR. Contract tests verify that separately-built components agree on interfaces.</p>
+          <span class="confidence conf-med">Needs definition</span>
+        </div>
+        <div class="card" style="border-color:rgba(180,142,255,0.3)">
+          <h3 style="color:var(--violet)">Layer C: Release-Level</h3>
+          <p>E2E and staging validation before production. Staged rollout with monitoring.</p>
+          <span class="confidence conf-med">Needs definition</span>
+        </div>
+      </div>
+      <div class="callout" style="margin-top:0.4rem">
+        The gap to close: defining what integration testing means when agents produce the pieces &mdash; especially verifying that separately-built components agree on interfaces.
+      </div>
+    </div>
+    <div class="foot">
+      <span>Testing</span>
+      <div class="progress-track"><div class="progress-fill" style="width:36%"></div></div>
+    </div>
+  </section>
+
+  <!-- S7: DECISION 5 — REVIEW -->
+  <section class="slide">
+    <div class="num">05</div>
+    <div class="kicker">Decision 5 of 6</div>
+    <h2><span class="a">Review</span> &mdash; human checkpoints, risk-tiered</h2>
+    <div class="body">
+      <div class="grid-3">
+        <div class="card" style="border-color:rgba(255,107,122,0.3)">
+          <h3 style="color:var(--red)">High Risk</h3>
+          <p>Auth, billing, data model, security. <strong>Mandatory human review.</strong> No exceptions.</p>
+        </div>
+        <div class="card" style="border-color:rgba(255,203,87,0.3)">
+          <h3 style="color:var(--amber)">Medium Risk</h3>
+          <p>Business logic, API changes. <strong>Lighter human review + CI.</strong> Focus on intent, not style.</p>
+        </div>
+        <div class="card" style="border-color:rgba(92,240,168,0.3)">
+          <h3 style="color:var(--green)">Low Risk</h3>
+          <p>Tests, docs, config, formatting. <strong>CI-only with sampling.</strong> Human reviews a random subset.</p>
+        </div>
+      </div>
+      <ul style="margin-top:0.4rem">
+        <li>Keeps review load sustainable instead of drowning in 200 PRs/day.</li>
+        <li>Security and compliance controls &mdash; secrets handling, data access, OSS dependency risk &mdash; are part of the risk classification.</li>
+      </ul>
+      <span class="confidence conf-open">Confidence: Principle is sound, specific classification mechanism needs definition</span>
+    </div>
+    <div class="foot">
+      <span>Review gates</span>
+      <div class="progress-track"><div class="progress-fill" style="width:43%"></div></div>
+    </div>
+  </section>
+
+  <!-- S8: DECISION 6 — TRACKING -->
+  <section class="slide">
+    <div class="num">06</div>
+    <div class="kicker">Decision 6 of 6</div>
+    <h2><span class="c">Tracking</span> &mdash; Jira + Beads, each in its lane</h2>
+    <div class="body">
+      <div class="cmp">
+        <div class="cmp-col">
+          <h3 style="color:var(--amber)">Jira</h3>
+          <ul>
+            <li>Epics and stories</li>
+            <li>Product, management, cross-team visibility</li>
+            <li>Sprint planning and roadmap</li>
+            <li>The system of record for leadership</li>
+          </ul>
+        </div>
+        <div class="cmp-col">
+          <h3 style="color:var(--cyan)">Beads</h3>
+          <ul>
+            <li>Agent-level execution tasks</li>
+            <li>Developer's local task graph</li>
+            <li>ACs, dependencies, evidence on close</li>
+            <li>Lives in the repo, travels with the code</li>
+          </ul>
+        </div>
+      </div>
+      <ul style="margin-top:0.5rem">
+        <li><strong>Bidirectional sync</strong> keeps them connected. Product managers never see beads. Developers rarely update Jira directly.</li>
+        <li>I've run a <strong>100-issue bidirectional sync</strong> already &mdash; the mechanism works.</li>
+      </ul>
+      <span class="confidence conf-high">Confidence: High &mdash; proven at scale in my workflow</span>
+    </div>
+    <div class="foot">
+      <span>Tracking</span>
+      <div class="progress-track"><div class="progress-fill" style="width:50%"></div></div>
+    </div>
+  </section>
+
+  <!-- S9: THE PIPELINE -->
+  <section class="slide">
+    <div class="kicker">End-to-End</div>
+    <h2>The 6-phase pipeline</h2>
+    <div class="body">
+      <div class="flow">
+        <div class="flow-node" style="border-color:var(--amber);background:rgba(255,203,87,0.06)">Ideation<br><small style="color:var(--ink-dim)">PM</small></div>
+        <div class="flow-arr">&rarr;</div>
+        <div class="flow-node" style="border-color:var(--violet);background:rgba(180,142,255,0.06)">Spec &amp; Architecture<br><small style="color:var(--ink-dim)">human + agent</small></div>
+        <div class="flow-arr">&rarr;</div>
+        <div class="flow-node" style="border-color:var(--cyan);background:rgba(92,234,255,0.06)">Story Decomposition<br><small style="color:var(--ink-dim)">team</small></div>
+        <div class="flow-arr">&rarr;</div>
+        <div class="flow-node" style="border-color:var(--green);background:rgba(92,240,168,0.06)">Agent Execution<br><small style="color:var(--ink-dim)">dev + agent</small></div>
+        <div class="flow-arr">&rarr;</div>
+        <div class="flow-node" style="border-color:var(--red);background:rgba(255,107,122,0.06)">Review &amp; Integration<br><small style="color:var(--ink-dim)">risk-tiered</small></div>
+        <div class="flow-arr">&rarr;</div>
+        <div class="flow-node" style="border-color:var(--amber);background:rgba(255,203,87,0.06)">Deploy<br><small style="color:var(--ink-dim)">staged + monitored</small></div>
+      </div>
+      <div class="callout" style="margin-top:1rem">
+        Phases 1&ndash;3 are human-led with agent assistance. Phase 4 is agent-led with human guardrails. Phases 5&ndash;6 are human-controlled with automated gates.
+      </div>
+      <p class="subtitle" style="margin-top:0.5rem">
+        This pipeline is <strong>tool-agnostic</strong>. A developer using Cursor, Claude Code, Copilot, or any future agent follows the same operating model. The discipline lives in the process and the rules &mdash; not in any single product.
+      </p>
+    </div>
+    <div class="foot">
+      <span>Pipeline</span>
+      <div class="progress-track"><div class="progress-fill" style="width:57%"></div></div>
+    </div>
+  </section>
+
+  <!-- S10: TOOL-AGNOSTIC + MULTI-REPO -->
+  <section class="slide">
+    <div class="kicker">Design Principle</div>
+    <h2>Tool-agnostic, multi-repo by default</h2>
+    <div class="body">
+      <div class="cards" style="grid-template-columns:1fr 1fr">
+        <article class="card" style="border-color:rgba(92,234,255,0.3)">
+          <h3 style="color:var(--cyan)">Tool-Agnostic</h3>
+          <p>The operating model doesn't lock us into one AI tool. Cursor, Claude Code, Copilot, Windsurf &mdash; any agent that can read rules and execute tasks fits in.</p>
+          <ul style="margin-top:0.5rem;gap:0.3rem">
+            <li style="font-size:0.88rem"><strong>Rules</strong> are markdown files in the repo &mdash; portable across tools</li>
+            <li style="font-size:0.88rem"><strong>Beads</strong> are CLI-driven &mdash; any agent with shell access can use them</li>
+            <li style="font-size:0.88rem"><strong>Quality gates</strong> are CI-based &mdash; tool-independent</li>
+          </ul>
+        </article>
+        <article class="card" style="border-color:rgba(180,142,255,0.3)">
+          <h3 style="color:var(--violet)">Multi-Repo</h3>
+          <p>Real projects span multiple repos. The model handles this natively.</p>
+          <ul style="margin-top:0.5rem;gap:0.3rem">
+            <li style="font-size:0.88rem"><strong>Beads per repo</strong> &mdash; each repo has its own task graph</li>
+            <li style="font-size:0.88rem"><strong>Cross-repo deps</strong> via Jira stories that span repos</li>
+            <li style="font-size:0.88rem"><strong>Shared rules</strong> synced across repos via playbook</li>
+            <li style="font-size:0.88rem"><strong>Gotcha:</strong> agent context doesn't span repos &mdash; design for explicit handoffs</li>
+          </ul>
+        </article>
+      </div>
+      <div class="callout callout-violet" style="margin-top:0.5rem">
+        We should <strong>encourage</strong> developers to use whichever AI tool they're most productive with. The operating model is the constant. The tool is a variable.
+      </div>
+    </div>
+    <div class="foot">
+      <span>Portability</span>
+      <div class="progress-track"><div class="progress-fill" style="width:64%"></div></div>
+    </div>
+  </section>
+
+  <!-- S11: CHANGE MANAGEMENT + COST -->
+  <section class="slide">
+    <div class="kicker">Beyond Process</div>
+    <h2>Two things that go beyond the process itself</h2>
+    <div class="body">
+      <div class="cards" style="grid-template-columns:1fr 1fr">
+        <article class="card" style="border-color:rgba(255,203,87,0.3)">
+          <h3 style="color:var(--amber)">Change Management</h3>
+          <p>This is a culture shift, not just tooling. Some developers will lean in fast, some will resist, some will over-rely on agents and skip review.</p>
+          <ul style="margin-top:0.5rem;gap:0.3rem">
+            <li style="font-size:0.88rem">Structured onboarding and enablement</li>
+            <li style="font-size:0.88rem">Minimum bar for "agent-ready team"</li>
+            <li style="font-size:0.88rem">Graceful path for teams where it doesn't fit yet</li>
+            <li style="font-size:0.88rem">Watch for gaming metrics vs. real adoption</li>
+          </ul>
+        </article>
+        <article class="card" style="border-color:rgba(255,107,122,0.3)">
+          <h3 style="color:var(--red)">Cost</h3>
+          <p>At 50 developers running agent sessions daily, API costs are meaningful.</p>
+          <ul style="margin-top:0.5rem;gap:0.3rem">
+            <li style="font-size:0.88rem">Pilot measures <strong>cost per unit of work</strong></li>
+            <li style="font-size:0.88rem">Model the org-wide number before scaling</li>
+            <li style="font-size:0.88rem">Compare against: time saved, defect reduction, review load</li>
+            <li style="font-size:0.88rem">Cost optimization: right-size models per task tier</li>
+          </ul>
+        </article>
+      </div>
+      <div class="callout callout-amber">
+        The rollout plan must account for human dynamics, not just technical readiness. And the cost model must be proven at pilot scale before committing org-wide.
+      </div>
+    </div>
+    <div class="foot">
+      <span>Change &amp; cost</span>
+      <div class="progress-track"><div class="progress-fill" style="width:71%"></div></div>
+    </div>
+  </section>
+
+  <!-- S12: PILOT PLAN -->
+  <section class="slide">
+    <div class="kicker">Rollout</div>
+    <h2>Don't go org-wide day one</h2>
+    <div class="body">
+      <div class="cards" style="grid-template-columns:repeat(4, 1fr)">
+        <article class="card" style="border-color:rgba(92,234,255,0.3)">
+          <h3 style="color:var(--cyan)">Scope</h3>
+          <p>2 teams, 4 weeks, fixed feature scope. Small enough to learn, big enough to prove.</p>
+        </article>
+        <article class="card" style="border-color:rgba(92,240,168,0.3)">
+          <h3 style="color:var(--green)">Baseline</h3>
+          <p>Capture metrics <strong>before</strong> day 1: lead time to merge, change failure rate, rework rate, human review load.</p>
+        </article>
+        <article class="card" style="border-color:rgba(255,203,87,0.3)">
+          <h3 style="color:var(--amber)">Measure</h3>
+          <p>Same metrics during the pilot. Plus: cost per bead, agent utilization, developer satisfaction.</p>
+        </article>
+        <article class="card" style="border-color:rgba(180,142,255,0.3)">
+          <h3 style="color:var(--violet)">Decide</h3>
+          <p>Prove it works, iterate on what doesn't, then expand. Data-driven, not faith-driven.</p>
+        </article>
+      </div>
+      <div class="callout" style="margin-top:0.6rem">
+        <strong>Success criteria:</strong> Measurable improvement in at least 2 of 4 baseline metrics, with cost per unit of work within acceptable range. Process adherence &ge; 80% (teams actually using the model, not working around it).
+      </div>
+    </div>
+    <div class="foot">
+      <span>Pilot plan</span>
+      <div class="progress-track"><div class="progress-fill" style="width:79%"></div></div>
+    </div>
+  </section>
+
+  <!-- S13: 3-MONTH vs 12-MONTH -->
+  <section class="slide">
+    <div class="kicker">Roadmap</div>
+    <h2>3-month vs. 12-month horizon</h2>
+    <div class="body">
+      <div class="cmp" style="max-width:1000px">
+        <div class="cmp-col" style="border-color:rgba(92,240,168,0.3)">
+          <h3 style="color:var(--green)">3 Months &mdash; Deploy Now</h3>
+          <ul>
+            <li>Shared Cursor rules across teams</li>
+            <li>Beads + Jira sync for 2 pilot teams</li>
+            <li>Risk classification v1 (path-based heuristics)</li>
+            <li>Bead-level testing enforced by rules</li>
+            <li>Manual decomposition with templates</li>
+            <li>1:1 developer-to-agent ratio</li>
+            <li>Baseline metrics captured</li>
+          </ul>
+        </div>
+        <div class="cmp-col" style="border-color:rgba(180,142,255,0.3)">
+          <h3 style="color:var(--violet)">12 Months &mdash; Scale To</h3>
+          <ul>
+            <li>Agent-proposed decomposition (human approves)</li>
+            <li>Orchestration layer for multi-agent dispatch</li>
+            <li>Contract testing at component boundaries</li>
+            <li>Automated risk classification from code analysis</li>
+            <li>Cross-repo coordination via shared task graphs</li>
+            <li>Cost-optimized model selection per task tier</li>
+            <li>Org-wide rollout based on pilot data</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="foot">
+      <span>Roadmap</span>
+      <div class="progress-track"><div class="progress-fill" style="width:86%"></div></div>
+    </div>
+  </section>
+
+  <!-- S14: CONFIDENCE SUMMARY -->
+  <section class="slide">
+    <div class="kicker">Honest Assessment</div>
+    <h2>Where we stand on each decision</h2>
+    <div class="body">
+      <div class="cards" style="grid-template-columns:repeat(3, 1fr)">
+        <article class="card" style="border-color:rgba(92,240,168,0.3)">
+          <h3 style="color:var(--green)">High Confidence</h3>
+          <p style="font-size:0.95rem;color:var(--ink)">Proven in daily use. Ready to deploy.</p>
+          <ul style="margin-top:0.5rem;gap:0.3rem">
+            <li style="font-size:0.88rem"><strong>Decomposition</strong> &mdash; two-tier model</li>
+            <li style="font-size:0.88rem"><strong>Assignment</strong> &mdash; Jira + agent execution</li>
+            <li style="font-size:0.88rem"><strong>Tracking</strong> &mdash; Jira/Beads sync</li>
+          </ul>
+        </article>
+        <article class="card" style="border-color:rgba(255,203,87,0.3)">
+          <h3 style="color:var(--amber)">Medium Confidence</h3>
+          <p style="font-size:0.95rem;color:var(--ink)">Works at individual scale. Needs org validation.</p>
+          <ul style="margin-top:0.5rem;gap:0.3rem">
+            <li style="font-size:0.88rem"><strong>Coherence</strong> &mdash; shared guardrails</li>
+            <li style="font-size:0.88rem"><strong>Testing</strong> &mdash; layers B &amp; C</li>
+          </ul>
+        </article>
+        <article class="card" style="border-color:rgba(180,142,255,0.3)">
+          <h3 style="color:var(--violet)">Open / Needs Definition</h3>
+          <p style="font-size:0.95rem;color:var(--ink)">Principle is sound. Mechanism TBD.</p>
+          <ul style="margin-top:0.5rem;gap:0.3rem">
+            <li style="font-size:0.88rem"><strong>Review</strong> &mdash; risk classification scheme</li>
+          </ul>
+        </article>
+      </div>
+      <div class="callout" style="margin-top:0.5rem">
+        The pilot's primary job is to move the medium and open items to high confidence &mdash; or learn why they need a different approach.
+      </div>
+    </div>
+    <div class="foot">
+      <span>Confidence map</span>
+      <div class="progress-track"><div class="progress-fill" style="width:93%"></div></div>
+    </div>
+  </section>
+
+  <!-- S15: CLOSE -->
+  <section class="slide">
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center">
+      <div class="kicker">Next Steps</div>
+      <h1 style="font-size:clamp(2rem,4vw,3.6rem)">Pilot with 2 teams.<br>Measure what matters.<br><span class="c">Then scale.</span></h1>
+      <p class="subtitle" style="margin-top:1rem;max-width:820px">
+        The full process doc and operating-model reference are in progress in the <strong>ai-dev-playbook</strong> repo. This deck is the framework. The pilot is where we prove it.
+      </p>
+      <div class="title-tags" style="margin-top:1.4rem">
+        <span class="tag" style="border-color:rgba(92,234,255,0.4)">Whitepaper in progress</span>
+        <span class="tag" style="border-color:rgba(180,142,255,0.4)">Pilot plan ready to define</span>
+        <span class="tag" style="border-color:rgba(92,240,168,0.4)">Happy to walk through it</span>
+      </div>
+    </div>
+    <div class="foot">
+      <span>Kevin Glynn &middot; kglynn@pryoninc.com</span>
+      <div class="progress-track"><div class="progress-fill" style="width:100%"></div></div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+(function () {
+  var slides = Array.from(document.querySelectorAll(".slide"));
+  var idx = 0;
+
+  function show(n) {
+    n = Math.max(0, Math.min(n, slides.length - 1));
+    if (n === idx) return;
+    var dir = n > idx ? 1 : -1;
+    slides[idx].classList.remove("active");
+    slides[idx].style.transform = "translateY(" + (-dir * 12) + "px)";
+    idx = n;
+    slides[idx].style.transform = "translateY(" + (dir * 12) + "px)";
+    void slides[idx].offsetWidth;
+    slides[idx].classList.add("active");
+  }
+
+  document.addEventListener("keydown", function (e) {
+    if (["ArrowRight","PageDown"," ","Spacebar"].includes(e.key)) { e.preventDefault(); show(idx+1); }
+    else if (["ArrowLeft","PageUp"].includes(e.key))              { e.preventDefault(); show(idx-1); }
+    else if (e.key === "Home") show(0);
+    else if (e.key === "End")  show(slides.length-1);
+  });
+
+  document.addEventListener("click", function (e) {
+    if (e.target.closest("a, button, input, code")) return;
+    e.clientX > window.innerWidth * 0.5 ? show(idx+1) : show(idx-1);
+  });
+
+  var touchX = 0;
+  document.addEventListener("touchstart", function (e) { touchX = e.changedTouches[0].clientX; });
+  document.addEventListener("touchend", function (e) {
+    var dx = e.changedTouches[0].clientX - touchX;
+    if (Math.abs(dx) > 50) dx < 0 ? show(idx+1) : show(idx-1);
+  });
+})();
+</script>
+</body>
+</html>
