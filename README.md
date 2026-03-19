@@ -14,6 +14,7 @@ Canonical `.mdc` rule files for Cursor projects. These are the source of truth â
 | `bead-completion.mdc` | JIT verification, self-review against ACs, AC ownership protocol |
 | `design-docs.mdc` | When to create committed specs (3+ beads or high-risk areas) |
 | `worktree-awareness.mdc` | Git worktree isolation: commit-early discipline, beads DB per-worktree, no false fabrication claims |
+| `multi-agent-review.mdc` | Two-tier review protocol: same-model multi-lens (autonomous) + cross-model (human-assisted) |
 
 ### `cursor/settings-ui/`
 Backup of user-level Cursor Settings UI rules. These apply globally across all projects.

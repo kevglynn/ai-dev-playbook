@@ -22,6 +22,7 @@ FILES=(
   "bead-completion.mdc"
   "design-docs.mdc"
   "worktree-awareness.mdc"
+  "multi-agent-review.mdc"
 )
 
 sync_rules_to() {
