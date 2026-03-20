@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>From Chat to System — Kevin Glynn</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-0: #0a0b10;
+      --bg-1: #10131f;
+      --bg-2: #171c2e;
+      --ink: #edf2ff;
+      --ink-dim: #9eabc4;
+      --cyan: #5ceaff;
+      --violet: #b48eff;
+      --amber: #ffcb57;
+      --green: #5cf0a8;
+      --red: #ff6b7a;
+      --card: rgba(255,255,255,0.04);
+      --card-hover: rgba(255,255,255,0.07);
+      --border: rgba(255,255,255,0.1);
+      --border-bright: rgba(255,255,255,0.2);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: var(--bg-0);
+      color: var(--ink);
+      font-family: "DM Sans", system-ui, sans-serif;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .deck {
+      width: 100vw; height: 100vh;
+      position: relative;
+      background:
+        radial-gradient(ellipse at 80% -20%, rgba(180,142,255,0.15), transparent 50%),
+        radial-gradient(ellipse at 15% 110%, rgba(92,234,255,0.1), transparent 50%),
+        var(--bg-0);
+    }
+
+    /* --- slides --- */
+    .slide {
+      position: absolute; inset: 0;
+      padding: 5vh 6vw 4vh;
+      display: flex; flex-direction: column;
+      opacity: 0;
+      transform: translateY(12px);
+      pointer-events: none;
+      transition: opacity 280ms ease, transform 280ms ease;
+    }
+    .slide.active {
+      opacity: 1; transform: none; pointer-events: auto;
+    }
+
+    /* --- typography --- */
+    .kicker {
+      font-family: "Syne", sans-serif;
+      font-size: clamp(0.7rem, 1vw, 0.85rem);
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      margin-bottom: 0.6rem;
+    }
+
+    h1 {
+      font-family: "Syne", sans-serif;
+      font-size: clamp(2.6rem, 5vw, 4.8rem);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -0.01em;
+      margin-bottom: 0.5rem;
+    }
+
+    h2 {
+      font-family: "Syne", sans-serif;
+      font-size: clamp(1.7rem, 3.2vw, 3rem);
+      font-weight: 700;
+      line-height: 1.12;
+      margin-bottom: 0.5rem;
+      max-width: 900px;
+    }
+
+    .subtitle {
+      font-size: clamp(1.05rem, 1.5vw, 1.35rem);
+      color: var(--ink-dim);
+      line-height: 1.5;
+      max-width: 780px;
+    }
+
+    .body { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 1.4rem; }
+
+    ul { list-style: none; padding: 0; display: grid; gap: 0.7rem; max-width: 880px; }
+    li {
+      font-size: clamp(1.02rem, 1.4vw, 1.25rem);
+      line-height: 1.45;
+      padding-left: 1.6rem;
+      position: relative;
+    }
+    li::before {
+      content: "";
+      position: absolute; left: 0; top: 0.55em;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--cyan);
+      opacity: 0.7;
+    }
+
+    b, strong { color: var(--ink); font-weight: 700; }
+    .c { color: var(--cyan); }
+    .v { color: var(--violet); }
+    .a { color: var(--amber); }
+    .g { color: var(--green); }
+
+    /* --- cards --- */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0.75rem;
+      max-width: 1050px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1rem 1.1rem 0.9rem;
+      transition: background 200ms;
+    }
+    .card:hover { background: var(--card-hover); }
+    .card h3 {
+      font-family: "Syne", sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.35rem;
+    }
+    .card p { font-size: 0.92rem; color: var(--ink-dim); line-height: 1.4; }
+
+    .card--cyan  h3 { color: var(--cyan); }
+    .card--violet h3 { color: var(--violet); }
+    .card--amber h3 { color: var(--amber); }
+    .card--green h3 { color: var(--green); }
+
+    /* --- flow --- */
+    .flow {
+      display: flex; flex-wrap: wrap; gap: 0.55rem;
+      align-items: center; max-width: 1050px;
+    }
+    .flow-node {
+      padding: 0.55rem 0.85rem;
+      border-radius: 10px;
+      border: 1px solid var(--border-bright);
+      background: rgba(255,255,255,0.03);
+      font-weight: 700; font-size: 0.88rem;
+    }
+    .flow-arr { color: var(--amber); font-weight: 800; font-size: 1.1rem; }
+
+    /* --- comparison table --- */
+    .cmp {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      max-width: 800px;
+    }
+    .cmp-col {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.1rem 1.2rem;
+    }
+    .cmp-col h3 {
+      font-family: "Syne", sans-serif;
+      font-size: 1.05rem; font-weight: 700;
+      margin-bottom: 0.6rem;
+    }
+    .cmp-col ul { gap: 0.4rem; }
+    .cmp-col li { font-size: 0.95rem; }
+    .cmp-col li::before { width: 6px; height: 6px; top: 0.55em; }
+
+    /* --- demo slide --- */
+    .demo-label {
+      font-family: "Syne", sans-serif;
+      font-size: clamp(1rem, 1.6vw, 1.3rem);
+      font-weight: 700;
+      color: var(--amber);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .demo-steps {
+      display: grid; gap: 0.6rem; max-width: 700px;
+      counter-reset: step;
+    }
+    .demo-step {
+      counter-increment: step;
+      display: flex; align-items: baseline; gap: 0.7rem;
+      font-size: 1.1rem;
+    }
+    .demo-step::before {
+      content: counter(step);
+      font-family: "Syne", sans-serif;
+      font-weight: 800; font-size: 1.3rem;
+      color: var(--amber); min-width: 1.4rem;
+    }
+
+    /* --- resource table --- */
+    .resources {
+      display: grid; gap: 0.55rem; max-width: 780px;
+    }
+    .resource-row {
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      gap: 1rem;
+      align-items: baseline;
+      padding: 0.6rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .resource-row:last-child { border-bottom: none; }
+    .resource-name {
+      font-family: "Syne", sans-serif;
+      font-weight: 700; font-size: 0.95rem;
+    }
+    .resource-desc { font-size: 0.95rem; color: var(--ink-dim); }
+
+    /* --- footer / nav --- */
+    .foot {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 0.6rem;
+      font-size: 0.82rem;
+      color: #6b7a96;
+    }
+    .progress-track {
+      width: 120px; height: 3px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 3px; overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--cyan);
+      border-radius: 3px;
+      transition: width 300ms ease;
+    }
+    .nav-hint { opacity: 0.6; }
+
+    /* --- title slide special --- */
+    .title-meta {
+      margin-top: 1.6rem;
+      font-size: 1.05rem;
+      color: var(--ink-dim);
+    }
+    .title-tags {
+      display: flex; flex-wrap: wrap; gap: 0.4rem;
+      margin-top: 1.2rem;
+    }
+    .tag {
+      padding: 0.3rem 0.65rem;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #c5d0e8;
+    }
+
+    /* highlight box */
+    .callout {
+      background: rgba(92,234,255,0.06);
+      border-left: 3px solid var(--cyan);
+      padding: 0.8rem 1rem;
+      border-radius: 0 10px 10px 0;
+      max-width: 780px;
+      font-size: 1.05rem;
+      line-height: 1.45;
+      color: var(--ink);
+    }
+  </style>
+</head>
+<body>
+<main class="deck" id="deck">
+
+  <!-- S1: TITLE -->
+  <section class="slide active">
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center">
+      <div class="kicker">Internal Tech Talk</div>
+      <h1>From Chat to System</h1>
+      <p class="subtitle">How I'm building a structured, repeatable workflow for AI-assisted development&nbsp;&mdash; and what I think comes next.</p>
+      <p class="title-meta">Kevin Glynn &middot; Pryon &middot; March 2026</p>
+      <div class="title-tags">
+        <span class="tag">Beads</span>
+        <span class="tag">Stringer</span>
+        <span class="tag">Gas Town</span>
+        <span class="tag">Cursor Rules</span>
+        <span class="tag">Jira Sync</span>
+      </div>
+    </div>
+    <div class="foot">
+      <span></span>
+      <span class="nav-hint">← → or click to navigate</span>
+    </div>
+  </section>
+
+  <!-- S2: THE PROBLEM -->
+  <section class="slide">
+    <div class="kicker">The Problem</div>
+    <h2>Chat-based AI development doesn't scale</h2>
+    <div class="body">
+      <ul>
+        <li><strong class="a">Context decay:</strong> long sessions lose key decisions and earlier reasoning.</li>
+        <li><strong class="a">No persistent memory:</strong> restart the session and you're re-explaining from scratch.</li>
+        <li><strong class="a">Coordination is manual:</strong> you become the router, tracker, and quality gate.</li>
+        <li><strong class="a">"Done" is unverified:</strong> no acceptance criteria, no evidence, just trust.</li>
+      </ul>
+      <div class="callout">
+        Chat is great for exploration. It's not a reliable coordination layer for real work.
+      </div>
+    </div>
+    <div class="foot">
+      <span>Problem framing</span>
+      <div class="progress-track"><div class="progress-fill" style="width:7%"></div></div>
+    </div>
+  </section>
+
+  <!-- S3: WHAT I SET OUT TO DO -->
+  <section class="slide">
+    <div class="kicker">My Goal</div>
+    <h2>Build a repeatable, observable workflow for AI-assisted engineering</h2>
+    <div class="body">
+      <ul>
+        <li><strong>Persistent task tracking</strong> that agents and humans share&nbsp;&mdash; not trapped in chat history.</li>
+        <li><strong>Data-driven backlog generation</strong> from real codebase signals, not just gut feel.</li>
+        <li><strong>Quality discipline</strong> baked into agent behavior: test-first, acceptance criteria, evidence on close.</li>
+        <li><strong>A path toward orchestration</strong> when the work outgrows a single conversation.</li>
+      </ul>
+    </div>
+    <div class="foot">
+      <span>Motivation</span>
+      <div class="progress-track"><div class="progress-fill" style="width:14%"></div></div>
+    </div>
+  </section>
+
+  <!-- S4: THE STACK -->
+  <section class="slide">
+    <div class="kicker">What I've Built</div>
+    <h2>The stack I'm using daily</h2>
+    <div class="body">
+      <div class="cards">
+        <article class="card card--cyan">
+          <h3>Beads (bd)</h3>
+          <p>Structured work items with dependencies, acceptance criteria, and persistent state in every repo.</p>
+        </article>
+        <article class="card card--cyan">
+          <h3>BeadsX + beads-ui</h3>
+          <p>Cursor sidebar extension and web board. Work is visible where you code.</p>
+        </article>
+        <article class="card card--violet">
+          <h3>Stringer</h3>
+          <p>Scans git history for churn, TODOs, lottery-risk files. Turns invisible debt into visible work.</p>
+        </article>
+        <article class="card card--green">
+          <h3>Cursor Workflow Rules</h3>
+          <p>Four .mdc rules that teach agents test discipline, AC verification, and evidence-based completion.</p>
+        </article>
+        <article class="card card--amber">
+          <h3>Jira Sync</h3>
+          <p>Bidirectional sync between Beads and Jira. Local work feeds into org-level tracking.</p>
+        </article>
+      </div>
+    </div>
+    <div class="foot">
+      <span>Toolchain overview</span>
+      <div class="progress-track"><div class="progress-fill" style="width:21%"></div></div>
+    </div>
+  </section>
+
+  <!-- S5: BEADS -->
+  <section class="slide">
+    <div class="kicker">Deep Dive</div>
+    <h2><span class="c">Beads</span>&nbsp;&mdash; work as structured data</h2>
+    <div class="body">
+      <ul>
+        <li>Each work item is explicit: title, description, <strong>acceptance criteria</strong>, dependencies.</li>
+        <li>State lives in the repo, not in your head or a chat window. Survives crashes and restarts.</li>
+        <li><strong>Dependency-aware:</strong> agents can't skip ahead&nbsp;&mdash; blocked work stays blocked.</li>
+        <li>Humans and agents share the same source of truth. No translation layer.</li>
+      </ul>
+      <div class="callout">
+        Instead of chat history, the <strong>task graph becomes project memory</strong>.
+      </div>
+    </div>
+    <div class="foot">
+      <span>Beads</span>
+      <div class="progress-track"><div class="progress-fill" style="width:29%"></div></div>
+    </div>
+  </section>
+
+  <!-- S6: STRINGER -->
+  <section class="slide">
+    <div class="kicker">Deep Dive</div>
+    <h2><span class="v">Stringer</span>&nbsp;&mdash; data-driven backlog generation</h2>
+    <div class="body">
+      <ul>
+        <li>Scans your git history for risk signals: <strong>churn hotspots, TODO clusters, single-author files</strong>.</li>
+        <li>Findings are triaged with human judgment&nbsp;&mdash; not auto-imported blindly.</li>
+        <li>In practice: 2,500+ raw signals reduced to <strong>6 high-value work items</strong> that wouldn't have been filed otherwise.</li>
+        <li>Example: <em>"useChatState.ts changed 57 times in 90 days&nbsp;&mdash; that's a refactoring signal."</em></li>
+      </ul>
+      <div class="callout">
+        The best backlog items come from your codebase, not your memory.
+      </div>
+    </div>
+    <div class="foot">
+      <span>Stringer</span>
+      <div class="progress-track"><div class="progress-fill" style="width:36%"></div></div>
+    </div>
+  </section>
+
+  <!-- S7: STRINGER GLOSSARY -->
+  <section class="slide">
+    <div class="kicker">Quick Orientation</div>
+    <h2>What <span class="v">Stringer</span> is looking for</h2>
+    <div class="body">
+      <div class="cards">
+        <article class="card card--violet">
+          <h3>Code Churn</h3>
+          <p>How often a file changes. A file modified 50+ times in 90 days usually means unstable design or shifting requirements&nbsp;&mdash; a prime refactoring candidate.</p>
+        </article>
+        <article class="card card--violet">
+          <h3>Lottery Risk</h3>
+          <p>"What if this developer wins the lottery and disappears?" When 90%+ of a file's commits come from one person, that knowledge is dangerously concentrated.</p>
+        </article>
+        <article class="card card--violet">
+          <h3>TODO / FIXME Clusters</h3>
+          <p>Comments like <code style="color:var(--violet);background:rgba(180,142,255,0.08);padding:0.1rem 0.35rem;border-radius:4px">TODO</code>, <code style="color:var(--violet);background:rgba(180,142,255,0.08);padding:0.1rem 0.35rem;border-radius:4px">FIXME</code>, <code style="color:var(--violet);background:rgba(180,142,255,0.08);padding:0.1rem 0.35rem;border-radius:4px">HACK</code> in source code. A few are normal. A cluster signals incomplete architecture or deferred debt.</p>
+        </article>
+        <article class="card card--violet">
+          <h3>Hotspots</h3>
+          <p>Files that are <em>both</em> complex and frequently changed. These are where bugs are most likely to live and where maintenance costs compound.</p>
+        </article>
+      </div>
+      <p class="subtitle" style="margin-top:0.6rem">
+        None of these signals are visible by reading the code. They live in the <strong>history</strong>&nbsp;&mdash; that's why it's called codebase archaeology.
+      </p>
+    </div>
+    <div class="foot">
+      <span>Stringer concepts</span>
+      <div class="progress-track"><div class="progress-fill" style="width:40%"></div></div>
+    </div>
+  </section>
+
+  <!-- S8: WORKFLOW RULES -->
+  <section class="slide">
+    <div class="kicker">Deep Dive</div>
+    <h2><span class="g">Workflow Rules</span>&nbsp;&mdash; teaching agents discipline</h2>
+    <div class="body">
+      <div class="cards">
+        <article class="card card--green">
+          <h3>Pragmatic TDD</h3>
+          <p>Test-first for bugs and features. Skip for chores and docs. A "zero-signal test" taxonomy tells agents what NOT to write.</p>
+        </article>
+        <article class="card card--green">
+          <h3>Bead Quality</h3>
+          <p>Acceptance criteria required upfront. Evidence mapped to ACs when closing. Non-goals prevent scope creep.</p>
+        </article>
+        <article class="card card--green">
+          <h3>Bead Completion</h3>
+          <p>Verify reality before coding. Self-review against ACs before declaring done. Escalate if ACs are wrong.</p>
+        </article>
+        <article class="card card--green">
+          <h3>Design Docs</h3>
+          <p>Committed specs for larger work (3+ items or high-risk areas). Strategy in git, not in chat.</p>
+        </article>
+      </div>
+      <p class="subtitle" style="margin-top:0.6rem">These rules travel with the repo. Every new session picks them up automatically.</p>
+    </div>
+    <div class="foot">
+      <span>Agent discipline</span>
+      <div class="progress-track"><div class="progress-fill" style="width:43%"></div></div>
+    </div>
+  </section>
+
+  <!-- S9: DAILY WORKFLOW -->
+  <section class="slide">
+    <div class="kicker">Putting It Together</div>
+    <h2>Two entry points, one delivery system</h2>
+    <div class="body">
+      <div style="display:grid;grid-template-columns:auto auto auto 1fr;grid-template-rows:auto auto auto;gap:0;max-width:1060px;align-items:center">
+
+        <!-- Row 1: Path A -->
+        <div style="grid-row:1;grid-column:1;display:flex;align-items:center;gap:0.5rem;padding:0.4rem 0">
+          <div class="flow-node" style="border-color:var(--amber);background:rgba(255,203,87,0.06)">Start with a goal<br><small style="color:var(--ink-dim)">chat session</small></div>
+          <div class="flow-arr">→</div>
+          <div class="flow-node" style="border-color:var(--amber);background:rgba(255,203,87,0.06)">Iterate on plan<br><small style="color:var(--ink-dim)">back &amp; forth</small></div>
+          <div class="flow-arr">→</div>
+          <div class="flow-node" style="border-color:var(--amber);background:rgba(255,203,87,0.06)">Create beads<br><small style="color:var(--ink-dim)">via agent</small></div>
+        </div>
+        <!-- Bracket top -->
+        <div style="grid-row:1;grid-column:2;width:24px;height:50%;align-self:end;border-right:2px solid var(--cyan);border-top:2px solid var(--cyan);border-radius:0 8px 0 0"></div>
+        <!-- Empty -->
+        <div style="grid-row:1;grid-column:3"></div>
+        <div style="grid-row:1;grid-column:4"></div>
+
+        <!-- Row 2: Merge point + execution -->
+        <div style="grid-row:2;grid-column:1"></div>
+        <!-- Bracket arrow -->
+        <div style="grid-row:2;grid-column:2;display:flex;align-items:center;justify-content:flex-end;width:24px">
+          <div style="width:24px;border-right:2px solid var(--cyan)"></div>
+        </div>
+        <div style="grid-row:2;grid-column:3;display:flex;align-items:center;gap:0.5rem;padding:0.35rem 0">
+          <div class="flow-arr" style="color:var(--cyan)">→</div>
+          <div class="flow-node" style="border-color:var(--cyan);background:rgba(92,234,255,0.1);border-width:2px"><strong>Structured Beads</strong><br><small style="color:var(--ink-dim)">ACs + deps</small></div>
+        </div>
+        <div style="grid-row:2;grid-column:4;display:flex;align-items:center;gap:0.5rem;padding:0.35rem 0">
+          <div class="flow-arr">→</div>
+          <div class="flow-node">Implement<br><small style="color:var(--ink-dim)">test-first</small></div>
+          <div class="flow-arr">→</div>
+          <div class="flow-node" style="border-color:var(--green)">Self-review<br><small style="color:var(--ink-dim)">AC check</small></div>
+          <div class="flow-arr">→</div>
+          <div class="flow-node" style="border-color:var(--amber)">Close + sync<br><small style="color:var(--ink-dim)">Jira</small></div>
+        </div>
+
+        <!-- Row 3: Path B -->
+        <div style="grid-row:3;grid-column:1;display:flex;align-items:center;gap:0.5rem;padding:0.4rem 0">
+          <div class="flow-node" style="border-color:var(--violet);background:rgba(180,142,255,0.06)">Scan for signals<br><small style="color:var(--ink-dim)">Stringer</small></div>
+          <div class="flow-arr">→</div>
+          <div class="flow-node" style="border-color:var(--violet);background:rgba(180,142,255,0.06)">Triage findings<br><small style="color:var(--ink-dim)">human judgment</small></div>
+          <div class="flow-arr">→</div>
+          <div class="flow-node" style="border-color:var(--violet);background:rgba(180,142,255,0.06)">Create beads<br><small style="color:var(--ink-dim)">from signals</small></div>
+        </div>
+        <!-- Bracket bottom -->
+        <div style="grid-row:3;grid-column:2;width:24px;height:50%;align-self:start;border-right:2px solid var(--cyan);border-bottom:2px solid var(--cyan);border-radius:0 0 8px 0"></div>
+        <div style="grid-row:3;grid-column:3"></div>
+        <div style="grid-row:3;grid-column:4"></div>
+      </div>
+
+      <p class="subtitle" style="margin-top:1rem">
+        Sometimes I start from a <strong class="a">goal</strong>. Sometimes from a <strong class="v">signal</strong>. Either way, work enters the same structured system&nbsp;&mdash; and that's the point.
+      </p>
+    </div>
+    <div class="foot">
+      <span>Operating loop</span>
+      <div class="progress-track"><div class="progress-fill" style="width:50%"></div></div>
+    </div>
+  </section>
+
+  <!-- S9: DEMO BREAK -->
+  <section class="slide">
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:flex-start">
+      <div class="demo-label">Live Demo</div>
+      <h2 style="margin-top:0.4rem">Let me show you what this looks like</h2>
+      <div class="demo-steps" style="margin-top:1.6rem">
+        <div class="demo-step">Show a Stringer report&nbsp;&mdash; real signals from igloo-connector</div>
+        <div class="demo-step">Create a Bead from a finding (live)</div>
+        <div class="demo-step">See it in Cursor's sidebar and web board</div>
+        <div class="demo-step">Push it to Jira with one command&nbsp;&mdash; bidirectional sync</div>
+        <div class="demo-step">See it appear on the Jira board</div>
+      </div>
+    </div>
+    <div class="foot">
+      <span>Demo time</span>
+      <div class="progress-track"><div class="progress-fill" style="width:57%"></div></div>
+    </div>
+  </section>
+
+  <!-- S10: ORCHESTRATION -->
+  <section class="slide">
+    <div class="kicker">What I'm Exploring Next</div>
+    <h2>Orchestration layers&nbsp;&mdash; coordinating multiple agents</h2>
+    <div class="body">
+      <ul>
+        <li>When work volume exceeds one agent, you need <strong>scheduling, monitoring, and recovery</strong>.</li>
+        <li>An orchestration layer reads the task graph, assigns work to agents, and tracks progress.</li>
+        <li>Think of it like <strong>CI/CD for agent work</strong>&nbsp;&mdash; not just for code builds.</li>
+      </ul>
+      <p class="subtitle" style="margin-top:0.5rem">Two tools I'm learning from:</p>
+      <div class="cards" style="grid-template-columns:1fr 1fr;max-width:700px">
+        <article class="card" style="border-color:rgba(255,203,87,0.3)">
+          <h3 style="color:var(--amber)">Gas Town</h3>
+          <p>Named agent identities, durable work assignment, convoy tracking, stuck-agent detection. I've used it on real projects&nbsp;&mdash; still finding its sweet spot.</p>
+        </article>
+        <article class="card" style="border-color:rgba(255,203,87,0.3)">
+          <h3 style="color:var(--amber)">Foolery</h3>
+          <p>Visual wave planning and verification queues. Haven't trialed it yet, but the concept of structured agent dispatch is where this is heading.</p>
+        </article>
+      </div>
+      <div class="callout" style="margin-top:0.5rem">
+        The task graph (Beads) is the data layer. The orchestrator is the control plane. I'm not there daily yet&nbsp;&mdash; but I can see the path.
+      </div>
+    </div>
+    <div class="foot">
+      <span>Orchestration</span>
+      <div class="progress-track"><div class="progress-fill" style="width:71%"></div></div>
+    </div>
+  </section>
+
+  <!-- S11: REPO VS GOAL CENTERED -->
+  <section class="slide">
+    <div class="kicker">Where This Is Heading</div>
+    <h2>Two models are emerging</h2>
+    <div class="body">
+      <div class="cmp">
+        <div class="cmp-col">
+          <h3 style="color:var(--cyan)">Repo-Centered</h3>
+          <ul>
+            <li>Start from tasks</li>
+            <li>Tasks → implementation → commits</li>
+            <li>Human defines work items</li>
+            <li>Most tools today (Cursor, Claude Code, Beads)</li>
+          </ul>
+        </div>
+        <div class="cmp-col">
+          <h3 style="color:var(--violet)">Goal-Centered</h3>
+          <ul>
+            <li>Start from a goal</li>
+            <li>Goal → analyze → generate tasks dynamically</li>
+            <li>Agents decompose and execute</li>
+            <li>Emerging in research and early tools</li>
+          </ul>
+        </div>
+      </div>
+      <div class="callout" style="margin-top:0.6rem">
+        The likely future is <strong>hybrid</strong>: goals generate tasks, but tasks stay structured and auditable.
+      </div>
+    </div>
+    <div class="foot">
+      <span>Architecture models</span>
+      <div class="progress-track"><div class="progress-fill" style="width:79%"></div></div>
+    </div>
+  </section>
+
+  <!-- S12: HUMAN ROLE -->
+  <section class="slide">
+    <div class="kicker">The Shift</div>
+    <h2>The human role is changing</h2>
+    <div class="body">
+      <div class="cmp">
+        <div class="cmp-col">
+          <h3 style="color:var(--ink-dim)">Before</h3>
+          <ul>
+            <li>Write code directly</li>
+            <li>Track context in your head</li>
+            <li>Manage tasks manually</li>
+            <li>Quality = your review bandwidth</li>
+          </ul>
+        </div>
+        <div class="cmp-col">
+          <h3 style="color:var(--green)">Emerging</h3>
+          <ul>
+            <li>Define goals and constraints</li>
+            <li>Set architecture guardrails</li>
+            <li>Review and approve output</li>
+            <li>Quality = systematic gates</li>
+          </ul>
+        </div>
+      </div>
+      <div class="callout" style="margin-top:0.6rem">
+        The challenge is no longer <em>generating</em> code. It's <strong>coordinating intelligent agents</strong>.
+      </div>
+    </div>
+    <div class="foot">
+      <span>Human evolution</span>
+      <div class="progress-track"><div class="progress-fill" style="width:80%"></div></div>
+    </div>
+  </section>
+
+  <!-- S13: COMFORT ZONE -->
+  <section class="slide">
+    <div class="kicker">The Honest Part</div>
+    <h2>This requires pushing past comfort</h2>
+    <div class="body">
+      <ul>
+        <li>It means <strong>stopping writing code</strong> for stretches&nbsp;&mdash; and learning to prompt, plan, review, and iterate instead.</li>
+        <li>It feels slow at first. That's the learning curve, not the ceiling.</li>
+        <li>The alternative is familiar: <em>"I prefer to write my own code, I'm old school."</em></li>
+      </ul>
+      <div class="callout" style="border-left-color:var(--amber);background:rgba(255,203,87,0.06)">
+        Remember the people who didn't want to use Stack Overflow?<br>
+        Or who resisted version control because "my system works fine"?<br><br>
+        <strong>They weren't wrong about their skill. They were wrong about the direction.</strong>
+      </div>
+      <p class="subtitle" style="margin-top:0.8rem">
+        The developers who lean in now will define how this works for everyone else.
+      </p>
+    </div>
+    <div class="foot">
+      <span>Call to action</span>
+      <div class="progress-track"><div class="progress-fill" style="width:87%"></div></div>
+    </div>
+  </section>
+
+  <!-- S14: COLLABORATION -->
+  <section class="slide">
+    <div class="kicker">Join In</div>
+    <h2>What I've set up for us</h2>
+    <div class="body">
+      <div class="resources">
+        <div class="resource-row">
+          <span class="resource-name c">Bitbucket Repo</span>
+          <span class="resource-desc"><strong>pryoninc/ai-dev-playbook</strong>&nbsp;&mdash; Cursor rules, scripts, sync tooling. Clone it, copy the rules, you're running.</span>
+        </div>
+        <div class="resource-row">
+          <span class="resource-name a">Jira Board</span>
+          <span class="resource-desc"><strong>PC &mdash; Pryon Community</strong>&nbsp;&mdash; work items for the playbook itself. File ideas, grab tasks.</span>
+        </div>
+        <div class="resource-row">
+          <span class="resource-name v">Confluence Space</span>
+          <span class="resource-desc"><strong>ADC &mdash; AI Dev Community</strong>&nbsp;&mdash; docs, discussions, decision records. The orientation page is live.</span>
+        </div>
+      </div>
+      <div style="margin-top:1.2rem">
+        <h3 style="font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;margin-bottom:0.6rem">Get started in 3 steps:</h3>
+        <ul>
+          <li>Clone <code style="color:var(--cyan);background:rgba(92,234,255,0.08);padding:0.15rem 0.4rem;border-radius:4px">pryoninc/ai-dev-playbook</code></li>
+          <li>Copy the <code style="color:var(--cyan);background:rgba(92,234,255,0.08);padding:0.15rem 0.4rem;border-radius:4px">.mdc</code> rules into your project's <code style="color:var(--cyan);background:rgba(92,234,255,0.08);padding:0.15rem 0.4rem;border-radius:4px">.cursor/rules/</code></li>
+          <li>Start a new Cursor chat&nbsp;&mdash; the rules are active immediately</li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot">
+      <span>Collaboration</span>
+      <div class="progress-track"><div class="progress-fill" style="width:93%"></div></div>
+
+    </div>
+  </section>
+
+  <!-- S14: CLOSE -->
+  <section class="slide">
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center">
+      <div class="kicker">Wrap Up</div>
+      <h1 style="font-size:clamp(2rem,4vw,3.8rem)">From "AI assistant" to <span class="c">AI delivery system</span></h1>
+      <p class="subtitle" style="margin-top:1rem;max-width:820px">
+        The biggest mindset change is treating AI work like engineering work: explicit units, explicit ownership, explicit quality gates.
+      </p>
+      <p class="subtitle" style="margin-top:1.2rem">
+        <span class="c">Beads</span> gives structure.
+        <span class="v">Stringer</span> gives discovery.
+        <span class="g">Rules</span> give discipline.
+        <span class="a">Orchestration</span> gives scale.
+      </p>
+      <p class="subtitle" style="margin-top:1.6rem;color:var(--ink)">
+        Try it for one sprint. See what changes. Let's learn together.
+      </p>
+    </div>
+    <div class="foot">
+      <span>Thank you &middot; Q&amp;A</span>
+      <div class="progress-track"><div class="progress-fill" style="width:100%"></div></div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+(function () {
+  const slides = Array.from(document.querySelectorAll(".slide"));
+  let idx = 0;
+
+  function show(n) {
+    n = Math.max(0, Math.min(n, slides.length - 1));
+    if (n === idx) return;
+    const dir = n > idx ? 1 : -1;
+    slides[idx].classList.remove("active");
+    slides[idx].style.transform = `translateY(${-dir * 12}px)`;
+    idx = n;
+    slides[idx].style.transform = `translateY(${dir * 12}px)`;
+    void slides[idx].offsetWidth;
+    slides[idx].classList.add("active");
+  }
+
+  document.addEventListener("keydown", function (e) {
+    if (["ArrowRight","PageDown"," ","Spacebar"].includes(e.key)) { e.preventDefault(); show(idx+1); }
+    else if (["ArrowLeft","PageUp"].includes(e.key))              { e.preventDefault(); show(idx-1); }
+    else if (e.key === "Home") show(0);
+    else if (e.key === "End")  show(slides.length-1);
+  });
+
+  document.addEventListener("click", function (e) {
+    if (e.target.closest("a, button, input, code")) return;
+    e.clientX > window.innerWidth * 0.5 ? show(idx+1) : show(idx-1);
+  });
+
+  let touchX = 0;
+  document.addEventListener("touchstart", function (e) { touchX = e.changedTouches[0].clientX; });
+  document.addEventListener("touchend", function (e) {
+    const dx = e.changedTouches[0].clientX - touchX;
+    if (Math.abs(dx) > 50) dx < 0 ? show(idx+1) : show(idx-1);
+  });
+})();
+</script>
+</body>
+</html>

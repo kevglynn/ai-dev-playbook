@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stringer Workflow — From Scan to Structured Work</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-0: #0a0b10;
+      --bg-1: #10131f;
+      --ink: #edf2ff;
+      --ink-dim: #9eabc4;
+      --cyan: #5ceaff;
+      --violet: #b48eff;
+      --amber: #ffcb57;
+      --green: #5cf0a8;
+      --red: #ff6b7a;
+      --card: rgba(255,255,255,0.04);
+      --border: rgba(255,255,255,0.1);
+      --border-bright: rgba(255,255,255,0.2);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%; height: 100%;
+      background: var(--bg-0);
+      color: var(--ink);
+      font-family: "DM Sans", system-ui, sans-serif;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    .deck {
+      width: 100vw; height: 100vh;
+      position: relative;
+      background:
+        radial-gradient(ellipse at 80% -20%, rgba(180,142,255,0.15), transparent 50%),
+        radial-gradient(ellipse at 15% 110%, rgba(92,234,255,0.1), transparent 50%),
+        var(--bg-0);
+    }
+    .slide {
+      position: absolute; inset: 0;
+      padding: 5vh 6vw 4vh;
+      display: flex; flex-direction: column;
+      opacity: 0; transform: translateY(12px);
+      pointer-events: none;
+      transition: opacity 280ms ease, transform 280ms ease;
+    }
+    .slide.active { opacity: 1; transform: none; pointer-events: auto; }
+    .kicker {
+      font-family: "Syne", sans-serif;
+      font-size: clamp(0.7rem, 1vw, 0.85rem);
+      font-weight: 700; letter-spacing: 0.22em;
+      text-transform: uppercase; color: var(--violet);
+      margin-bottom: 0.6rem;
+    }
+    h1 {
+      font-family: "Syne", sans-serif;
+      font-size: clamp(2.4rem, 5vw, 4.6rem);
+      font-weight: 800; line-height: 1.05;
+      margin-bottom: 0.5rem;
+    }
+    h2 {
+      font-family: "Syne", sans-serif;
+      font-size: clamp(1.6rem, 3.2vw, 2.8rem);
+      font-weight: 700; line-height: 1.12;
+      margin-bottom: 0.5rem; max-width: 900px;
+    }
+    .subtitle {
+      font-size: clamp(1rem, 1.5vw, 1.3rem);
+      color: var(--ink-dim); line-height: 1.5; max-width: 780px;
+    }
+    .body { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 1.2rem; }
+    .c { color: var(--cyan); }
+    .v { color: var(--violet); }
+    .a { color: var(--amber); }
+    .g { color: var(--green); }
+    .r { color: var(--red); }
+
+    /* code blocks */
+    .terminal {
+      background: #0d1117;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 1rem 1.2rem;
+      font-family: "JetBrains Mono", monospace;
+      font-size: clamp(0.78rem, 1.1vw, 0.92rem);
+      line-height: 1.55;
+      overflow-x: auto;
+      max-width: 960px;
+    }
+    .terminal .prompt { color: var(--green); }
+    .terminal .cmd { color: var(--ink); }
+    .terminal .flag { color: var(--amber); }
+    .terminal .comment { color: #6a7a94; }
+    .terminal .output { color: var(--ink-dim); }
+    .terminal .highlight { color: var(--cyan); }
+    .terminal .warn { color: var(--red); }
+
+    /* stats row */
+    .stats {
+      display: flex; gap: 1.2rem; flex-wrap: wrap; max-width: 900px;
+    }
+    .stat-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.8rem 1.1rem;
+      min-width: 140px;
+    }
+    .stat-val {
+      font-family: "Syne", sans-serif;
+      font-size: 1.6rem; font-weight: 800;
+      line-height: 1.1;
+    }
+    .stat-label {
+      font-size: 0.82rem; color: var(--ink-dim);
+      margin-top: 0.2rem;
+    }
+
+    /* report table */
+    .report-table {
+      width: 100%; max-width: 920px;
+      border-collapse: collapse;
+    }
+    .report-table th {
+      text-align: left;
+      font-family: "Syne", sans-serif;
+      font-size: 0.8rem; font-weight: 700;
+      color: var(--ink-dim);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.5rem 0.8rem;
+      border-bottom: 1px solid var(--border-bright);
+    }
+    .report-table td {
+      padding: 0.55rem 0.8rem;
+      font-size: 0.92rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    .report-table tr:last-child td { border-bottom: none; }
+    .badge {
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .badge-red { background: rgba(255,107,122,0.15); color: var(--red); }
+    .badge-amber { background: rgba(255,203,87,0.15); color: var(--amber); }
+    .badge-violet { background: rgba(180,142,255,0.15); color: var(--violet); }
+    .badge-cyan { background: rgba(92,234,255,0.15); color: var(--cyan); }
+    .badge-green { background: rgba(92,240,168,0.15); color: var(--green); }
+
+    /* cards */
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0.75rem; max-width: 960px; }
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 0.9rem 1rem;
+    }
+    .card h3 {
+      font-family: "Syne", sans-serif;
+      font-size: 0.95rem; font-weight: 700; margin-bottom: 0.3rem;
+    }
+    .card p { font-size: 0.88rem; color: var(--ink-dim); line-height: 1.4; }
+
+    /* callout */
+    .callout {
+      background: rgba(180,142,255,0.06);
+      border-left: 3px solid var(--violet);
+      padding: 0.7rem 1rem;
+      border-radius: 0 10px 10px 0;
+      max-width: 780px;
+      font-size: 1rem; line-height: 1.45;
+    }
+
+    /* flow */
+    .flow { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; max-width: 960px; }
+    .flow-node {
+      padding: 0.55rem 0.85rem; border-radius: 10px;
+      border: 1px solid var(--border-bright);
+      background: rgba(255,255,255,0.03);
+      font-weight: 700; font-size: 0.88rem;
+    }
+    .flow-arr { color: var(--amber); font-weight: 800; font-size: 1.1rem; }
+
+    /* footer */
+    .foot {
+      display: flex; justify-content: space-between; align-items: center;
+      padding-top: 0.6rem; font-size: 0.82rem; color: #6b7a96;
+    }
+    .progress-track {
+      width: 120px; height: 3px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 3px; overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%; background: var(--violet);
+      border-radius: 3px; transition: width 300ms ease;
+    }
+    .nav-hint { opacity: 0.6; }
+
+    ul { list-style: none; padding: 0; display: grid; gap: 0.5rem; max-width: 880px; }
+    li {
+      font-size: clamp(1rem, 1.3vw, 1.2rem); line-height: 1.45;
+      padding-left: 1.5rem; position: relative;
+    }
+    li::before {
+      content: ""; position: absolute; left: 0; top: 0.55em;
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--violet); opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+<main class="deck" id="deck">
+
+  <!-- S1: TITLE -->
+  <section class="slide active">
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center">
+      <div class="kicker">Stringer Workflow</div>
+      <h1>From Scan to <span class="v">Structured Work</span></h1>
+      <p class="subtitle" style="margin-top:0.6rem">
+        How Stringer mines a real codebase for risk signals&nbsp;&mdash; and how those signals become actionable, tracked work items in under 10 seconds.
+      </p>
+      <p class="subtitle" style="margin-top:1.2rem;color:var(--ink)">
+        Repo: <span class="v">igloo-connector</span>
+      </p>
+    </div>
+    <div class="foot">
+      <span></span>
+      <span class="nav-hint">← → or click to navigate</span>
+    </div>
+  </section>
+
+  <!-- S2: THE COMMAND -->
+  <section class="slide">
+    <div class="kicker">Step 1</div>
+    <h2>Run the scan</h2>
+    <div class="body">
+      <p class="subtitle">One command. Point it at a repo. Get a structured report.</p>
+      <div class="terminal">
+        <span class="prompt">$</span> <span class="cmd">stringer scan .</span> <span class="flag">-f markdown</span> \<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="flag">--exclude</span> <span class="output">'.history/**' '.cursor/**' 'node_modules/**'</span><br>
+        <br>
+        <span class="comment"># Full scan: 8 collectors, 76 signals</span><br>
+        <span class="comment"># Time: ~8 seconds</span>
+      </div>
+      <div class="terminal" style="margin-top:0.5rem">
+        <span class="prompt">$</span> <span class="cmd">stringer scan .</span> <span class="flag">-f markdown</span> \<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="flag">--collectors</span> <span class="highlight">todos,gitlog,lotteryrisk</span> \<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="flag">--exclude</span> <span class="output">'.history/**' '.cursor/**' 'node_modules/**'</span><br>
+        <br>
+        <span class="comment"># Focused scan: 3 collectors, 15 signals</span><br>
+        <span class="comment"># Time: under 1 second</span>
+      </div>
+    </div>
+    <div class="foot">
+      <span>The command</span>
+      <div class="progress-track"><div class="progress-fill" style="width:14%"></div></div>
+    </div>
+  </section>
+
+  <!-- S3: SCAN RESULTS OVERVIEW -->
+  <section class="slide">
+    <div class="kicker">Step 2</div>
+    <h2>The report: 76 signals across 8 categories</h2>
+    <div class="body">
+      <div class="stats">
+        <div class="stat-box">
+          <div class="stat-val r">16</div>
+          <div class="stat-label">P1 — Critical</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val a">20</div>
+          <div class="stat-label">P2 — High</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" style="color:var(--ink-dim)">13</div>
+          <div class="stat-label">P3 — Medium</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" style="color:#4a5568">27</div>
+          <div class="stat-label">P4 — Low</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val v">8</div>
+          <div class="stat-label">Categories</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val g">~8s</div>
+          <div class="stat-label">Scan time</div>
+        </div>
+      </div>
+      <div class="callout" style="margin-top:0.5rem">
+        76 signals does <strong>not</strong> mean 76 work items. Most of this is noise. The value is in the triage.
+      </div>
+    </div>
+    <div class="foot">
+      <span>Report overview</span>
+      <div class="progress-track"><div class="progress-fill" style="width:28%"></div></div>
+    </div>
+  </section>
+
+  <!-- S4: SIGNAL CATEGORIES -->
+  <section class="slide">
+    <div class="kicker">What Stringer Found</div>
+    <h2>Signal breakdown for igloo-connector</h2>
+    <div class="body">
+      <table class="report-table">
+        <thead>
+          <tr><th>Category</th><th>Count</th><th>Highlights</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="badge badge-red">lotteryrisk</span></td>
+            <td>7</td>
+            <td>One contributor owns <strong>85%</strong> of root, <strong>100%</strong> of src/components</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-amber">vulnerability</span></td>
+            <td>12</td>
+            <td>CVEs in qs, minimatch, axios, js-yaml, jws, and others</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-amber">todos</span></td>
+            <td>8</td>
+            <td>Unimplemented Temporal workflow checks, YugabyteDB tickets to file</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-violet">duplication</span></td>
+            <td>21</td>
+            <td>routes.ts has 10+ near-duplicate blocks across handlers</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-violet">complexity</span></td>
+            <td>4</td>
+            <td>getPool (11 branches), getContentMetadata (9 branches)</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-cyan">patterns</span></td>
+            <td>9</td>
+            <td>0 test files for 4 source files in src/. Low test ratio overall</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-cyan">githygiene</span></td>
+            <td>6</td>
+            <td>Possible hardcoded secrets in e2e test scripts</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-green">docstale</span></td>
+            <td>1</td>
+            <td>README.md untouched while repo had 12 commits</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="foot">
+      <span>Signal categories</span>
+      <div class="progress-track"><div class="progress-fill" style="width:42%"></div></div>
+    </div>
+  </section>
+
+  <!-- S5: TRIAGE -->
+  <section class="slide">
+    <div class="kicker">Step 3</div>
+    <h2>Triage with judgment, not bulk import</h2>
+    <div class="body">
+      <ul>
+        <li><strong>76 signals in. How many are real work?</strong> Maybe 3-5.</li>
+        <li>Duplications in test files? Probably fine. Duplications in routes.ts? Worth looking at.</li>
+        <li>21 duplication signals might become <strong>one</strong> bead: "Extract shared handler patterns in routes.ts"</li>
+        <li>7 lottery risk signals all point to the same root cause: <strong>one contributor</strong>.</li>
+      </ul>
+      <div class="callout">
+        The tool finds signals. <strong>You</strong> decide what matters. That judgment is the whole point.
+      </div>
+    </div>
+    <div class="foot">
+      <span>Triage</span>
+      <div class="progress-track"><div class="progress-fill" style="width:57%"></div></div>
+    </div>
+  </section>
+
+  <!-- S6: CANDIDATE WORK -->
+  <section class="slide">
+    <div class="kicker">Step 4</div>
+    <h2>Candidate work items from 76 signals</h2>
+    <div class="body">
+      <div class="cards">
+        <article class="card" style="border-color:rgba(255,107,122,0.3)">
+          <h3 style="color:var(--red)">Lottery risk: src/</h3>
+          <p>85% single-author. Cross-train, document architecture, add a second reviewer.</p>
+        </article>
+        <article class="card" style="border-color:rgba(255,203,87,0.3)">
+          <h3 style="color:var(--amber)">Vulnerable dependencies</h3>
+          <p>12 CVEs across qs, axios, minimatch, etc. Run npm audit, update or pin.</p>
+        </article>
+        <article class="card" style="border-color:rgba(180,142,255,0.3)">
+          <h3 style="color:var(--violet)">Duplication in routes.ts</h3>
+          <p>10+ near-duplicate blocks. Extract shared handler pattern to reduce maintenance cost.</p>
+        </article>
+        <article class="card" style="border-color:rgba(92,234,255,0.3)">
+          <h3 style="color:var(--cyan)">Test coverage gap</h3>
+          <p>Zero test files for 4 source files. Prioritize routes.ts and db.ts (highest complexity).</p>
+        </article>
+      </div>
+      <p class="subtitle" style="margin-top:0.6rem">
+        76 signals &rarr; <strong>4 candidate items</strong>. Each one is concrete, prioritized, and actionable.
+      </p>
+    </div>
+    <div class="foot">
+      <span>Candidate work</span>
+      <div class="progress-track"><div class="progress-fill" style="width:71%"></div></div>
+    </div>
+  </section>
+
+  <!-- S7: CREATE THE BEAD -->
+  <section class="slide">
+    <div class="kicker">Step 5</div>
+    <h2>Turn it into a structured bead</h2>
+    <div class="body">
+      <div class="terminal">
+        <span class="prompt">$</span> <span class="cmd">bd create</span> <span class="output">"Address lottery risk in igloo-connector src/"</span> \<br>
+        &nbsp;&nbsp;<span class="flag">--description=</span><span class="output">"Stringer flagged critical lottery risk:</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="output">Christian DiMare-Baits owns 85% of root commits,</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="output">100% of src/components, 56% of src/."</span> \<br>
+        &nbsp;&nbsp;<span class="flag">--acceptance=</span><span class="output">"At least one additional contributor has</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="output">reviewed and can explain the src/ architecture.</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="output">Key design decisions documented."</span> \<br>
+        &nbsp;&nbsp;<span class="flag">-t</span> <span class="highlight">task</span> <span class="flag">-p</span> <span class="highlight">2</span><br>
+        <br>
+        <span class="output">✓ Created issue: </span><span class="highlight">ic-c8l</span><span class="output"> — Address lottery risk in igloo-connector src/</span><br>
+        <span class="output">&nbsp;&nbsp;Priority: P2</span><br>
+        <span class="output">&nbsp;&nbsp;Status: open</span>
+      </div>
+      <p class="subtitle" style="margin-top:0.6rem">
+        Title, description, <strong>acceptance criteria</strong>, type, and priority&nbsp;&mdash; all in one command. This is a durable, queryable work item, not a chat message.
+      </p>
+    </div>
+    <div class="foot">
+      <span>Create the bead</span>
+      <div class="progress-track"><div class="progress-fill" style="width:85%"></div></div>
+    </div>
+  </section>
+
+  <!-- S8: FULL FLOW -->
+  <section class="slide">
+    <div class="kicker">The Complete Pipeline</div>
+    <h2>8 seconds from scan to structured work</h2>
+    <div class="body">
+      <div class="flow">
+        <div class="flow-node" style="border-color:var(--violet);background:rgba(180,142,255,0.06)">stringer scan<br><small style="color:var(--ink-dim)">~8 seconds</small></div>
+        <div class="flow-arr">→</div>
+        <div class="flow-node" style="border-color:var(--violet)">76 signals<br><small style="color:var(--ink-dim)">8 categories</small></div>
+        <div class="flow-arr">→</div>
+        <div class="flow-node" style="border-color:var(--amber)">Human triage<br><small style="color:var(--ink-dim)">judgment call</small></div>
+        <div class="flow-arr">→</div>
+        <div class="flow-node" style="border-color:var(--cyan)">4 candidates<br><small style="color:var(--ink-dim)">real work</small></div>
+        <div class="flow-arr">→</div>
+        <div class="flow-node" style="border-color:var(--cyan);background:rgba(92,234,255,0.08);border-width:2px">bd create<br><small style="color:var(--ink-dim)">beads + ACs</small></div>
+        <div class="flow-arr">→</div>
+        <div class="flow-node" style="border-color:var(--green)">Jira sync<br><small style="color:var(--ink-dim)">one command</small></div>
+      </div>
+      <div class="callout" style="margin-top:1rem">
+        The entire pipeline&nbsp;&mdash; from raw repo to tracked, org-visible work&nbsp;&mdash; takes <strong>minutes</strong>, not days. And it surfaces things you'd never find by reading the code.
+      </div>
+    </div>
+    <div class="foot">
+      <span>Full pipeline</span>
+      <div class="progress-track"><div class="progress-fill" style="width:100%"></div></div>
+    </div>
+  </section>
+
+  <!-- APPENDIX DIVIDER -->
+  <section class="slide">
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center">
+      <div class="kicker" style="color:var(--amber)">Appendix</div>
+      <h1 style="font-size:clamp(2rem,4.2vw,4rem)">Real Analyses from <span class="v">Two Repos</span></h1>
+      <p class="subtitle" style="margin-top:0.8rem">
+        Full signal breakdowns, candidate work items, and how each finding was produced by Stringer's collectors.
+      </p>
+      <div class="stats" style="margin-top:1.4rem">
+        <div class="stat-box" style="border-color:rgba(92,234,255,0.3)">
+          <div class="stat-val c">igloo-connector</div>
+          <div class="stat-label">76 signals &rarr; 4 candidates</div>
+        </div>
+        <div class="stat-box" style="border-color:rgba(180,142,255,0.3)">
+          <div class="stat-val v">jtbot-core</div>
+          <div class="stat-label">758 signals &rarr; 6 beads</div>
+        </div>
+      </div>
+    </div>
+    <div class="foot">
+      <span>Appendix</span>
+      <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
+    </div>
+  </section>
+
+  <!-- A1: IGLOO — LOTTERY RISK -->
+  <section class="slide">
+    <div class="kicker" style="color:var(--cyan)">igloo-connector &mdash; Candidate 1</div>
+    <h2><span class="r">Lottery risk</span> on src/</h2>
+    <div class="body">
+      <table class="report-table">
+        <thead><tr><th>Directory</th><th>Primary Author</th><th>Ownership</th></tr></thead>
+        <tbody>
+          <tr><td>Root (<code>.</code>)</td><td>Christian DiMare-Baits</td><td><strong class="r">85%</strong></td></tr>
+          <tr><td>src/components/</td><td>Christian DiMare-Baits</td><td><strong class="r">100%</strong></td></tr>
+          <tr><td>src/</td><td>Christian DiMare-Baits</td><td><strong class="a">56%</strong></td></tr>
+          <tr><td>bin/</td><td>Christian DiMare-Baits</td><td><strong class="r">100%</strong></td></tr>
+          <tr><td>test/</td><td>Christian DiMare-Baits</td><td><strong class="a">59%</strong></td></tr>
+        </tbody>
+      </table>
+      <div class="callout" style="margin-top:0.6rem">
+        <strong>How Stringer found this:</strong> The <code style="color:var(--violet)">lotteryrisk</code> collector analyzes git blame and commit attribution per directory. When one author exceeds a threshold (~40%+), it flags the directory as concentrated knowledge.
+      </div>
+      <p class="subtitle" style="margin-top:0.5rem"><strong>Candidate bead:</strong> Cross-train a second contributor on src/ architecture. Document key design decisions in a CONTRIBUTING.md.</p>
+    </div>
+    <div class="foot"><span>igloo-connector 1/4</span><div class="progress-track"><div class="progress-fill" style="width:15%"></div></div></div>
+  </section>
+
+  <!-- A2: IGLOO — VULNS -->
+  <section class="slide">
+    <div class="kicker" style="color:var(--cyan)">igloo-connector &mdash; Candidate 2</div>
+    <h2><span class="r">12 vulnerable dependencies</span></h2>
+    <div class="body">
+      <table class="report-table">
+        <thead><tr><th>Package</th><th>CVEs</th><th>Risk</th></tr></thead>
+        <tbody>
+          <tr><td><code>axios</code></td><td>CVE-2026-25639</td><td><span class="badge badge-red">Hot path</span> — all Igloo API calls</td></tr>
+          <tr><td><code>jws</code></td><td>CVE-2025-65945</td><td><span class="badge badge-amber">Auth-adjacent</span></td></tr>
+          <tr><td><code>qs</code></td><td>CVE-2025-15284, CVE-2026-2391</td><td>Express query parsing</td></tr>
+          <tr><td><code>minimatch</code></td><td>3 CVEs</td><td>Glob matching</td></tr>
+          <tr><td><code>js-yaml</code>, <code>flatted</code>, <code>ajv</code>, <code>diff</code>, <code>glob</code></td><td>5 CVEs</td><td>Various transitive</td></tr>
+        </tbody>
+      </table>
+      <div class="callout" style="margin-top:0.6rem">
+        <strong>How Stringer found this:</strong> The <code style="color:var(--violet)">vuln</code> collector runs <code>npm audit</code> (or equivalent) and maps CVEs to the dependency tree, scoring by severity and whether the package is in a hot code path.
+      </div>
+      <p class="subtitle" style="margin-top:0.5rem"><strong>Candidate bead:</strong> Run npm audit, update direct deps, evaluate overrides for transitive CVEs.</p>
+    </div>
+    <div class="foot"><span>igloo-connector 2/4</span><div class="progress-track"><div class="progress-fill" style="width:30%"></div></div></div>
+  </section>
+
+  <!-- A3: IGLOO — DUPLICATION -->
+  <section class="slide">
+    <div class="kicker" style="color:var(--cyan)">igloo-connector &mdash; Candidate 3</div>
+    <h2><span class="v">21 duplication signals</span> in routes.ts</h2>
+    <div class="body">
+      <ul>
+        <li><strong>404 delete workflow</strong> — identical pattern in <code>readContent</code> and <code>getContentMetadata</code>: catch 404 &rarr; query content_id &rarr; trigger Temporal workflow &rarr; return 204</li>
+        <li><strong>content_domain calculation</strong> — <code>type === "flex" ? host + "/" + customer_id : host</code> repeated in 4+ handlers</li>
+        <li><strong>Response envelope</strong> — <code>{ metadata: { uuid, response_time_millis }, ... }</code> with slight variations</li>
+      </ul>
+      <div class="callout" style="margin-top:0.6rem">
+        <strong>How Stringer found this:</strong> The <code style="color:var(--violet)">duplication</code> collector uses token-based comparison to find exact and near-duplicate code blocks (renamed identifiers). It groups by location and reports the longest/most-repeated patterns.
+      </div>
+      <p class="subtitle" style="margin-top:0.5rem"><strong>Candidate bead:</strong> Extract shared middleware for 404-delete-workflow, domain calc helper, and response envelope builder.</p>
+    </div>
+    <div class="foot"><span>igloo-connector 3/4</span><div class="progress-track"><div class="progress-fill" style="width:45%"></div></div></div>
+  </section>
+
+  <!-- A4: IGLOO — TEST COVERAGE -->
+  <section class="slide">
+    <div class="kicker" style="color:var(--cyan)">igloo-connector &mdash; Candidate 4</div>
+    <h2><span class="a">Zero test coverage</span> on src/</h2>
+    <div class="body">
+      <table class="report-table">
+        <thead><tr><th>Source file</th><th>Test file</th><th>Complexity</th></tr></thead>
+        <tbody>
+          <tr><td><code>src/routes.ts</code></td><td><span class="r">None</span></td><td>9 branches (getContentMetadata)</td></tr>
+          <tr><td><code>src/db.ts</code></td><td><span class="r">None</span></td><td>11 branches (getPool)</td></tr>
+          <tr><td><code>src/index.ts</code></td><td><span class="r">None</span></td><td>Server entry</td></tr>
+          <tr><td><code>src/components/Article.ts</code></td><td><span class="r">None</span></td><td>Rendering layer</td></tr>
+        </tbody>
+      </table>
+      <div class="callout" style="margin-top:0.6rem">
+        <strong>How Stringer found this:</strong> The <code style="color:var(--violet)">patterns</code> collector matches source files against test file naming conventions (*.test.ts, *.spec.ts, test/*). It also calculates test-to-source ratios per directory.
+      </div>
+      <p class="subtitle" style="margin-top:0.5rem"><strong>Candidate bead:</strong> Add contract tests for each route handler + unit tests for getPool and Article rendering.</p>
+    </div>
+    <div class="foot"><span>igloo-connector 4/4</span><div class="progress-track"><div class="progress-fill" style="width:55%"></div></div></div>
+  </section>
+
+  <!-- A5: JTBOT — CHURN -->
+  <section class="slide">
+    <div class="kicker" style="color:var(--violet)">jtbot-core &mdash; Bead 1 &amp; 2</div>
+    <h2><span class="a">Extreme churn</span> in two central files</h2>
+    <div class="body">
+      <table class="report-table">
+        <thead><tr><th>File</th><th>Changes / 90 days</th><th>Complexity</th></tr></thead>
+        <tbody>
+          <tr><td><code>src/hooks/useChatState.ts</code></td><td><strong class="r">55</strong></td><td>Score 333 · 1,869 lines · 296 branches</td></tr>
+          <tr><td><code>amplify/backend.ts</code></td><td><strong class="r">48</strong></td><td>Infrastructure-as-code config</td></tr>
+          <tr><td><code>amplify/data/resource.ts</code></td><td><strong class="a">37</strong></td><td>Data model definitions</td></tr>
+          <tr><td><code>bitbucket-pipelines.yml</code></td><td><strong class="a">32</strong></td><td>CI configuration</td></tr>
+          <tr><td><code>src/shared/utils/messagePersistence.ts</code></td><td><strong class="a">31</strong></td><td>Score 46 · 157 lines · 43 branches</td></tr>
+        </tbody>
+      </table>
+      <div class="callout" style="margin-top:0.6rem">
+        <strong>How Stringer found this:</strong> The <code style="color:var(--violet)">gitlog</code> collector counts commits-per-file over a rolling window (default 90 days). Files exceeding a threshold are flagged. Combined with the <code style="color:var(--violet)">complexity</code> collector, these become <strong>hotspots</strong>.
+      </div>
+      <p class="subtitle" style="margin-top:0.5rem"><strong>Beads created:</strong> jtbot-core-1dl (decompose useChatState) and jtbot-core-apg (stabilize backend.ts).</p>
+    </div>
+    <div class="foot"><span>jtbot-core 1/4</span><div class="progress-track"><div class="progress-fill" style="width:65%"></div></div></div>
+  </section>
+
+  <!-- A6: JTBOT — LOTTERY RISK -->
+  <section class="slide">
+    <div class="kicker" style="color:var(--violet)">jtbot-core &mdash; Bead 3</div>
+    <h2><span class="r">Lottery risk</span> across the entire codebase</h2>
+    <div class="body">
+      <table class="report-table">
+        <thead><tr><th>Directory</th><th>Primary Author</th><th>Ownership</th></tr></thead>
+        <tbody>
+          <tr><td>src/</td><td>jharris-pryon</td><td><strong class="r">88%</strong></td></tr>
+          <tr><td>src/data/</td><td>jharris-pryon</td><td><strong class="r">92%</strong></td></tr>
+          <tr><td>src/config/, src/utils/</td><td>jharris-pryon</td><td><strong class="r">100%</strong></td></tr>
+          <tr><td>amplify/storage/</td><td>jharris-pryon</td><td><strong class="r">82%</strong></td></tr>
+          <tr><td>src/shell/</td><td>kev</td><td><strong class="a">59%</strong></td></tr>
+          <tr><td>src/contexts/</td><td>kev</td><td><strong class="a">59%</strong></td></tr>
+          <tr><td>src/test/</td><td>kev</td><td><strong class="r">100%</strong></td></tr>
+        </tbody>
+      </table>
+      <div class="callout" style="margin-top:0.6rem">
+        <strong>Key insight:</strong> Two contributors own essentially all of this production platform. kev (you) owns shell, contexts, and tests. jharris-pryon owns everything else. 26 directories flagged.
+      </div>
+      <p class="subtitle" style="margin-top:0.5rem"><strong>Bead created:</strong> jtbot-core-bsg — cross-training, architecture docs, review rotation.</p>
+    </div>
+    <div class="foot"><span>jtbot-core 2/4</span><div class="progress-track"><div class="progress-fill" style="width:75%"></div></div></div>
+  </section>
+
+  <!-- A7: JTBOT — ENTRAID + BUGS -->
+  <section class="slide">
+    <div class="kicker" style="color:var(--violet)">jtbot-core &mdash; Beads 4 &amp; 5</div>
+    <h2><span class="r">Security placeholder</span> + silent error swallowing</h2>
+    <div class="body">
+      <div class="cards" style="grid-template-columns:1fr 1fr;max-width:800px">
+        <article class="card" style="border-color:rgba(255,107,122,0.3)">
+          <h3 style="color:var(--red)">EntraID Placeholder (P1)</h3>
+          <p><code>verify-auth-challenge-response/handler.ts:109</code><br><br>"Replace with actual EntraID admin group names/IDs" — incomplete auth integration in production code path.</p>
+        </article>
+        <article class="card" style="border-color:rgba(255,203,87,0.3)">
+          <h3 style="color:var(--amber)">Silent Error Swallowing (P2)</h3>
+          <p><code>src/apps/chat/ChatApp.tsx:201</code><br><br>"Show error to user" — catch blocks that discard exceptions. Failures happen silently; debugging becomes impossible.</p>
+        </article>
+      </div>
+      <div class="callout" style="margin-top:0.6rem">
+        <strong>How Stringer found this:</strong> The <code style="color:var(--violet)">todos</code> collector scans for TODO, FIXME, HACK, BUG comments. It found 24 across jtbot-core. These two were the highest-signal because they're in security-critical and user-facing code paths.
+      </div>
+      <p class="subtitle" style="margin-top:0.5rem"><strong>Beads created:</strong> jtbot-core-j4v (EntraID, P1) and jtbot-core-xbi (error handling, P2).</p>
+    </div>
+    <div class="foot"><span>jtbot-core 3/4</span><div class="progress-track"><div class="progress-fill" style="width:85%"></div></div></div>
+  </section>
+
+  <!-- A8: JTBOT — TECH DEBT + BUG COMMENTS -->
+  <section class="slide">
+    <div class="kicker" style="color:var(--violet)">jtbot-core &mdash; Bead 6 + bonus</div>
+    <h2>Tech debt + <span class="r">active BUG comments</span> still in code</h2>
+    <div class="body">
+      <div class="cards" style="grid-template-columns:1fr 1fr;max-width:800px">
+        <article class="card" style="border-color:rgba(180,142,255,0.3)">
+          <h3 style="color:var(--violet)">useNavigation.ts Tech Debt</h3>
+          <p>Two TODOs at lines 77 and 240: "Migrate to useReducer pattern." Complex state management that has outgrown its current approach.</p>
+        </article>
+        <article class="card" style="border-color:rgba(255,107,122,0.3)">
+          <h3 style="color:var(--red)">BUG Comments in Production</h3>
+          <p><code>ContentManagementTab.tsx:1398</code> — "This function polled selectedKdId (OLD domain) instead of the NEW domain"<br><code>:1415</code> — "Should be newDomainId!"</p>
+        </article>
+      </div>
+      <div class="callout" style="margin-top:0.6rem">
+        <strong>Still present on both main and dev.</strong> The BUG comments describe a known wrong-domain bug in ContentManagementTab. Stringer's <code style="color:var(--violet)">todos</code> collector flags BUG/FIXME with higher confidence (0.90) than regular TODOs (0.50), correctly prioritizing these.
+      </div>
+      <p class="subtitle" style="margin-top:0.5rem"><strong>Bead created:</strong> jtbot-core-ecy (useNavigation tech debt). The BUG comments are candidates for new beads.</p>
+    </div>
+    <div class="foot"><span>jtbot-core 4/4</span><div class="progress-track"><div class="progress-fill" style="width:95%"></div></div></div>
+  </section>
+
+  <!-- A9: COMPARISON -->
+  <section class="slide">
+    <div class="kicker" style="color:var(--amber)">Appendix &mdash; Takeaway</div>
+    <h2>Two repos, same process, same value</h2>
+    <div class="body">
+      <table class="report-table">
+        <thead><tr><th></th><th>igloo-connector</th><th>jtbot-core</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Signals</strong></td><td>76</td><td>758</td></tr>
+          <tr><td><strong>Scan time</strong></td><td>~8 seconds</td><td>~20 seconds</td></tr>
+          <tr><td><strong>Actionable items</strong></td><td>4 candidates</td><td>6 beads</td></tr>
+          <tr><td><strong>Triage ratio</strong></td><td class="a">5%</td><td class="a">0.8%</td></tr>
+          <tr><td><strong>Top risk</strong></td><td>Lottery risk (85%)</td><td>Auth placeholder + lottery (88%)</td></tr>
+          <tr><td><strong>Highest churn</strong></td><td>Low (small repo)</td><td>55 changes/90d</td></tr>
+        </tbody>
+      </table>
+      <div class="callout" style="margin-top:0.7rem">
+        Larger codebases produce exponentially more noise, but the number of truly actionable items doesn't scale linearly. <strong>The value of Stringer is not the signal count — it's finding the 6 needles in 758 pieces of hay.</strong>
+      </div>
+    </div>
+    <div class="foot"><span>Comparison</span><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
+  </section>
+
+</main>
+
+<script>
+(function () {
+  const slides = Array.from(document.querySelectorAll(".slide"));
+  let idx = 0;
+  function show(n) {
+    n = Math.max(0, Math.min(n, slides.length - 1));
+    if (n === idx) return;
+    const dir = n > idx ? 1 : -1;
+    slides[idx].classList.remove("active");
+    slides[idx].style.transform = "translateY(" + (-dir * 12) + "px)";
+    idx = n;
+    slides[idx].style.transform = "translateY(" + (dir * 12) + "px)";
+    void slides[idx].offsetWidth;
+    slides[idx].classList.add("active");
+  }
+  document.addEventListener("keydown", function (e) {
+    if (["ArrowRight","PageDown"," ","Spacebar"].includes(e.key)) { e.preventDefault(); show(idx+1); }
+    else if (["ArrowLeft","PageUp"].includes(e.key)) { e.preventDefault(); show(idx-1); }
+    else if (e.key === "Home") show(0);
+    else if (e.key === "End") show(slides.length-1);
+  });
+  document.addEventListener("click", function (e) {
+    if (e.target.closest("a,button,input,code")) return;
+    e.clientX > window.innerWidth * 0.5 ? show(idx+1) : show(idx-1);
+  });
+  let tx = 0;
+  document.addEventListener("touchstart", function (e) { tx = e.changedTouches[0].clientX; });
+  document.addEventListener("touchend", function (e) {
+    var dx = e.changedTouches[0].clientX - tx;
+    if (Math.abs(dx) > 50) dx < 0 ? show(idx+1) : show(idx-1);
+  });
+})();
+</script>
+</body>
+</html>
