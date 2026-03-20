@@ -27,17 +27,32 @@ Backup of user-level Cursor Settings UI rules. These apply globally across all p
 
 | Script | What it does |
 |--------|-------------|
-| `sync-cursor-rules.sh` | Copies `.mdc` rules from this repo to all target project repos |
+| `sync-cursor-rules.sh` | Syncs all `.mdc` rules to target repos. Supports `--check` for drift detection. |
+
+## Setup
+
+### First time
+1. Clone this repo
+2. Run `./scripts/sync-cursor-rules.sh` — it creates `~/.cursor-sync-targets` with a template
+3. Edit `~/.cursor-sync-targets` to add your repo paths (one `.cursor/rules` path per line)
+4. Run `./scripts/sync-cursor-rules.sh` again to distribute
+
+### Adding a new project repo
+Add its `.cursor/rules` path to `~/.cursor-sync-targets`. The file is local and untracked — no merge conflicts.
+
+### Checking for drift
+```bash
+./scripts/sync-cursor-rules.sh --check
+```
+Reports which targets have stale or missing rules without modifying anything.
 
 ## Workflow
 
 1. Edit rules in `cursor/rules/` (this repo is the canonical source)
-2. Run `./scripts/sync-cursor-rules.sh` to distribute to project repos
+2. Run `./scripts/sync-cursor-rules.sh` to distribute to project repos + worktrees
 3. If you update the Settings UI rule, also update `cursor/settings-ui/instructions-rule.md`
 
-## Adding a new project repo
-
-Edit the `TARGETS` array in `scripts/sync-cursor-rules.sh`.
+Rules are auto-discovered — adding a new `.mdc` file to `cursor/rules/` automatically includes it in the next sync. No script edits needed.
 
 ## Origin
 
