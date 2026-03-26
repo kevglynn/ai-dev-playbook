@@ -771,11 +771,55 @@
     </div>
   </section>
 
-  <!-- A2: CONCRETE EXAMPLE — PR REVIEW -->
+  <!-- A2: WHERE IT APPLIES -->
   <section class="slide">
-    <div class="kicker" style="color:var(--amber)">Example</div>
-    <h2>PR Review in ~10 minutes</h2>
+    <div class="kicker" style="color:var(--amber)">Where It Applies</div>
+    <h2>Anywhere judgment matters</h2>
     <div class="body">
+      <div class="cards" style="grid-template-columns:1fr 1fr 1fr;max-width:1050px">
+        <article class="card" style="border-color:rgba(255,203,87,0.3)">
+          <h3 style="color:var(--amber)">Planning &amp; Builds</h3>
+          <p>The most common use. Before writing code, get the plan down through intensive multi-model &rarr; synthesis &rarr; iterate loops. Feed the synthesis back to the diverge step if it needs another pass. Repeat until the plan is solid, then execute.</p>
+        </article>
+        <article class="card" style="border-color:rgba(92,234,255,0.3)">
+          <h3 style="color:var(--cyan)">Architecture &amp; Design</h3>
+          <p>One model reaches for Redis. Another proposes in-memory with TTL. A third flags that your read pattern doesn&rsquo;t actually need caching. The synthesis reveals the real trade-off you should be deciding on.</p>
+        </article>
+        <article class="card" style="border-color:rgba(180,142,255,0.3)">
+          <h3 style="color:var(--violet)">Research &amp; Exploration</h3>
+          <p>Models cite different libraries, protocols, and failure modes. Synthesis separates real consensus from one model&rsquo;s strong opinion &mdash; so you know what&rsquo;s actually proven vs. what&rsquo;s speculative.</p>
+        </article>
+        <article class="card" style="border-color:rgba(92,240,168,0.3)">
+          <h3 style="color:var(--green)">Code Review</h3>
+          <p>One model catches a race condition, another flags a missing test, a third spots an API contract mismatch. No single model catches all three. Synthesis finds consensus and drops noise.</p>
+        </article>
+        <article class="card" style="border-color:rgba(255,107,122,0.3)">
+          <h3 style="color:var(--red)">Bug Investigation</h3>
+          <p>Each model forms a different hypothesis about root cause. One blames the cache, another the event ordering, a third the data model. Synthesis ranks by evidence and identifies what to test first.</p>
+        </article>
+        <article class="card" style="border-color:rgba(92,234,255,0.3)">
+          <h3 style="color:var(--cyan)">Technical Writing</h3>
+          <p>One model leads with risk. Another leads with business value. A third over-simplifies. Synthesis finds the right framing and level of detail for the audience.</p>
+        </article>
+      </div>
+
+      <div class="callout" style="margin-top:0.5rem">
+        The pattern is iterative &mdash; not one-shot. Diverge &rarr; synthesize &rarr; calibrate, and if the output isn&rsquo;t right yet, feed it back into a new diverge round. The loop is the workflow.
+      </div>
+    </div>
+    <div class="foot">
+      <span>Broad applicability</span>
+      <div class="progress-track"><div class="progress-fill" style="width:66%"></div></div>
+    </div>
+  </section>
+
+  <!-- A3: DETAILED WALKTHROUGH — PR REVIEW -->
+  <section class="slide">
+    <div class="kicker" style="color:var(--amber)">Walkthrough</div>
+    <h2>Example: PR review in ~10 minutes</h2>
+    <div class="body">
+      <p class="subtitle" style="margin-bottom:0.4rem">One concrete example of the pattern end-to-end. Same steps apply to any task above.</p>
+
       <div style="display:grid;grid-template-columns:auto 1fr;gap:0.5rem 0.8rem;max-width:960px;align-items:start">
         <div style="font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;color:var(--cyan)">1</div>
         <div>
@@ -803,50 +847,12 @@
         </div>
       </div>
 
-      <div class="callout" style="margin-top:0.7rem">
-        <strong>Why it works:</strong> One model might catch a race condition, another flags a missing test, a third notices an API contract mismatch. No single model catches all three. The synthesis finds consensus and drops the noise.
-      </div>
-    </div>
-    <div class="foot">
-      <span>Example: PR review</span>
-      <div class="progress-track"><div class="progress-fill" style="width:66%"></div></div>
-    </div>
-  </section>
-
-  <!-- A3: WHERE ELSE IT APPLIES -->
-  <section class="slide">
-    <div class="kicker" style="color:var(--amber)">Applies Everywhere</div>
-    <h2>Same pattern, different tasks</h2>
-    <div class="body">
-      <div class="cards" style="grid-template-columns:1fr 1fr;max-width:960px">
-        <article class="card" style="border-color:rgba(92,234,255,0.3)">
-          <h3 style="color:var(--cyan)">Architecture &amp; Design</h3>
-          <p>&ldquo;I need to add caching to our API layer. Here are the constraints&hellip;&rdquo;<br><br>
-          One model reaches for Redis. Another proposes in-memory with TTL. A third flags that your read pattern doesn&rsquo;t actually need caching. The synthesis reveals the real trade-off.</p>
-        </article>
-        <article class="card" style="border-color:rgba(180,142,255,0.3)">
-          <h3 style="color:var(--violet)">Research &amp; Exploration</h3>
-          <p>&ldquo;What&rsquo;s the best approach to real-time sync between our mobile app and backend?&rdquo;<br><br>
-          Models cite different libraries, protocols, and failure modes. Synthesis finds which approaches have real consensus vs. which are one model&rsquo;s strong opinion.</p>
-        </article>
-        <article class="card" style="border-color:rgba(255,203,87,0.3)">
-          <h3 style="color:var(--amber)">Complex Implementation</h3>
-          <p>&ldquo;Decompose this migration into a phased plan&hellip;&rdquo;<br><br>
-          Different models propose different phase boundaries and risk orderings. Synthesis reveals which steps everyone agrees on and where the genuine uncertainty lives.</p>
-        </article>
-        <article class="card" style="border-color:rgba(92,240,168,0.3)">
-          <h3 style="color:var(--green)">Technical Writing &amp; Comms</h3>
-          <p>&ldquo;Help me explain this architectural decision to leadership&hellip;&rdquo;<br><br>
-          One model leads with risk. Another leads with business value. A third simplifies too far. Synthesis finds the right framing and level of detail.</p>
-        </article>
-      </div>
-
       <div class="callout" style="margin-top:0.6rem">
-        The principle: <strong>anywhere a single perspective can miss something or over-index on the wrong thing</strong>, three independent perspectives plus synthesis produces a better result. It takes roughly the same time as a single-model conversation &mdash; the parallel step is free, the synthesis step is fast.
+        Substitute any task for the PR review prompt. The structure is the same &mdash; diverge with the same question, synthesize the responses, calibrate through conversation, act on the result.
       </div>
     </div>
     <div class="foot">
-      <span>Broad applicability</span>
+      <span>Walkthrough: PR review</span>
       <div class="progress-track"><div class="progress-fill" style="width:100%"></div></div>
     </div>
   </section>
