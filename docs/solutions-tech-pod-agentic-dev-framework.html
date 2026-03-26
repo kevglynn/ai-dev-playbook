@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agentic Dev Framework — Solutions Tech Pod</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-0: #0a0b10;
+      --bg-1: #10131f;
+      --bg-2: #171c2e;
+      --ink: #edf2ff;
+      --ink-dim: #9eabc4;
+      --cyan: #5ceaff;
+      --violet: #b48eff;
+      --amber: #ffcb57;
+      --green: #5cf0a8;
+      --red: #ff6b7a;
+      --card: rgba(255,255,255,0.04);
+      --card-hover: rgba(255,255,255,0.07);
+      --border: rgba(255,255,255,0.1);
+      --border-bright: rgba(255,255,255,0.2);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: var(--bg-0);
+      color: var(--ink);
+      font-family: "DM Sans", system-ui, sans-serif;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .deck {
+      width: 100vw; height: 100vh;
+      position: relative;
+      background:
+        radial-gradient(ellipse at 80% -20%, rgba(180,142,255,0.15), transparent 50%),
+        radial-gradient(ellipse at 15% 110%, rgba(92,234,255,0.1), transparent 50%),
+        var(--bg-0);
+    }
+
+    .slide {
+      position: absolute; inset: 0;
+      padding: 5vh 6vw 4vh;
+      display: flex; flex-direction: column;
+      opacity: 0;
+      transform: translateY(12px);
+      pointer-events: none;
+      transition: opacity 280ms ease, transform 280ms ease;
+    }
+    .slide.active {
+      opacity: 1; transform: none; pointer-events: auto;
+    }
+
+    .kicker {
+      font-family: "Syne", sans-serif;
+      font-size: clamp(0.7rem, 1vw, 0.85rem);
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      margin-bottom: 0.6rem;
+    }
+
+    h1 {
+      font-family: "Syne", sans-serif;
+      font-size: clamp(2.6rem, 5vw, 4.8rem);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -0.01em;
+      margin-bottom: 0.5rem;
+    }
+
+    h2 {
+      font-family: "Syne", sans-serif;
+      font-size: clamp(1.7rem, 3.2vw, 3rem);
+      font-weight: 700;
+      line-height: 1.12;
+      margin-bottom: 0.5rem;
+      max-width: 900px;
+    }
+
+    .subtitle {
+      font-size: clamp(1.05rem, 1.5vw, 1.35rem);
+      color: var(--ink-dim);
+      line-height: 1.5;
+      max-width: 780px;
+    }
+
+    .body { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 1.2rem; }
+
+    ul { list-style: none; padding: 0; display: grid; gap: 0.6rem; max-width: 880px; }
+    li {
+      font-size: clamp(1rem, 1.4vw, 1.2rem);
+      line-height: 1.45;
+      padding-left: 1.6rem;
+      position: relative;
+    }
+    li::before {
+      content: "";
+      position: absolute; left: 0; top: 0.55em;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--cyan);
+      opacity: 0.7;
+    }
+
+    b, strong { color: var(--ink); font-weight: 700; }
+    .c { color: var(--cyan); }
+    .v { color: var(--violet); }
+    .a { color: var(--amber); }
+    .g { color: var(--green); }
+    .r { color: var(--red); }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0.75rem;
+      max-width: 1050px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1rem 1.1rem 0.9rem;
+      transition: background 200ms;
+    }
+    .card:hover { background: var(--card-hover); }
+    .card h3 {
+      font-family: "Syne", sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.35rem;
+    }
+    .card p { font-size: 0.92rem; color: var(--ink-dim); line-height: 1.4; }
+
+    .flow {
+      display: flex; flex-wrap: wrap; gap: 0.5rem;
+      align-items: center; max-width: 1050px;
+    }
+    .flow-node {
+      padding: 0.5rem 0.8rem;
+      border-radius: 10px;
+      border: 1px solid var(--border-bright);
+      background: rgba(255,255,255,0.03);
+      font-weight: 700; font-size: 0.85rem;
+      text-align: center;
+    }
+    .flow-arr { color: var(--amber); font-weight: 800; font-size: 1.1rem; }
+
+    .flow-loop {
+      display: flex; flex-direction: column; gap: 0.2rem;
+      border: 1px dashed var(--green);
+      border-radius: 12px;
+      padding: 0.25rem 0.55rem 0.35rem;
+      background: rgba(92,240,168,0.04);
+    }
+    .flow-loop-label {
+      font-size: 0.62rem;
+      color: var(--green);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      text-align: center;
+    }
+    .flow-loop-inner {
+      display: flex; align-items: center; gap: 0.35rem;
+    }
+
+    .callout {
+      background: rgba(92,234,255,0.06);
+      border-left: 3px solid var(--cyan);
+      padding: 0.7rem 1rem;
+      border-radius: 0 10px 10px 0;
+      max-width: 780px;
+      font-size: 1.02rem;
+      line-height: 1.45;
+      color: var(--ink);
+    }
+
+    .risk-table {
+      width: 100%; max-width: 1000px;
+      border-collapse: collapse;
+    }
+    .risk-table th {
+      text-align: left;
+      font-family: "Syne", sans-serif;
+      font-size: 0.78rem; font-weight: 700;
+      color: var(--ink-dim);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.5rem 0.7rem;
+      border-bottom: 1px solid var(--border-bright);
+    }
+    .risk-table td {
+      padding: 0.5rem 0.7rem;
+      font-size: 0.9rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    .risk-table tr:last-child td { border-bottom: none; }
+
+    .risk-badge {
+      display: inline-block;
+      padding: 0.15rem 0.55rem;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+    .risk-low { background: rgba(92,240,168,0.15); color: var(--green); }
+    .risk-med { background: rgba(255,203,87,0.15); color: var(--amber); }
+    .risk-high { background: rgba(255,107,122,0.15); color: var(--red); }
+
+    .cmp {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.75rem;
+      max-width: 960px;
+    }
+    .cmp-col {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1rem 1.1rem;
+    }
+    .cmp-col h3 {
+      font-family: "Syne", sans-serif;
+      font-size: 1rem; font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .cmp-col ul { gap: 0.35rem; }
+    .cmp-col li { font-size: 0.9rem; }
+    .cmp-col li::before { width: 6px; height: 6px; top: 0.55em; }
+
+    .phase-header {
+      font-family: "Syne", sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 0.3rem 0.7rem;
+      border-radius: 6px;
+      display: inline-block;
+      margin-bottom: 0.4rem;
+    }
+
+    .foot {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 0.6rem;
+      font-size: 0.82rem;
+      color: #6b7a96;
+    }
+    .progress-track {
+      width: 120px; height: 3px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 3px; overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--cyan);
+      border-radius: 3px;
+      transition: width 300ms ease;
+    }
+    .nav-hint { opacity: 0.6; }
+
+    .title-meta {
+      margin-top: 1.6rem;
+      font-size: 1.05rem;
+      color: var(--ink-dim);
+    }
+    .title-tags {
+      display: flex; flex-wrap: wrap; gap: 0.4rem;
+      margin-top: 1.2rem;
+    }
+    .tag {
+      padding: 0.3rem 0.65rem;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #c5d0e8;
+    }
+
+    .gate-grid {
+      display: grid;
+      grid-template-columns: 140px 1fr 1fr;
+      gap: 0;
+      max-width: 960px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .gate-grid .gh {
+      font-family: "Syne", sans-serif;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--ink-dim);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.6rem 0.8rem;
+      background: rgba(255,255,255,0.03);
+      border-bottom: 1px solid var(--border);
+    }
+    .gate-grid .gc {
+      padding: 0.6rem 0.8rem;
+      font-size: 0.88rem;
+      border-bottom: 1px solid var(--border);
+      border-left: 1px solid var(--border);
+    }
+    .gate-grid .gc:last-child,
+    .gate-grid .gh:last-child { border-bottom: none; }
+    .gate-grid .gc ul { gap: 0.25rem; }
+    .gate-grid .gc li { font-size: 0.85rem; padding-left: 1.2rem; }
+    .gate-grid .gc li::before { width: 5px; height: 5px; }
+  </style>
+</head>
+<body>
+<main class="deck" id="deck">
+
+  <!-- S1: TITLE -->
+  <section class="slide active">
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center">
+      <div class="kicker">Solutions Tech Pod</div>
+      <h1>Agentic Dev <span class="c">Framework</span></h1>
+      <p class="subtitle">A structured, evidence-based approach to AI-assisted development &mdash; from how we work today to where we're heading.</p>
+      <p class="title-meta">Jason &middot; Solutions Tech Pod &middot; March 2026</p>
+      <div class="title-tags">
+        <span class="tag">Crawl / Walk / Run</span>
+        <span class="tag">Beads</span>
+        <span class="tag">Stringer</span>
+        <span class="tag">Agent Rules</span>
+        <span class="tag">Jira Integration</span>
+      </div>
+    </div>
+    <div class="foot">
+      <span></span>
+      <span class="nav-hint">&larr; &rarr; or click to navigate</span>
+    </div>
+  </section>
+
+  <!-- S2: WHY A FRAMEWORK -->
+  <section class="slide">
+    <div class="kicker">The Problem</div>
+    <h2>Agents are powerful. Unstructured agent usage is a liability.</h2>
+    <div class="body">
+      <ul>
+        <li><strong class="a">Inconsistency:</strong> every developer uses agents differently &mdash; different prompts, different quality bars, nothing is comparable.</li>
+        <li><strong class="a">No accountability:</strong> agent output isn't verified against criteria. "Done" means "the agent stopped talking."</li>
+        <li><strong class="a">No tracking:</strong> agent work is invisible to the org. Jira doesn't know what happened. Sprint reports are fiction.</li>
+        <li><strong class="a">No escalation path:</strong> when an agent gets stuck or produces wrong output, there's no defined recovery.</li>
+      </ul>
+      <div class="callout">
+        We need a <strong>shared methodology</strong> &mdash; roles, accountability, quality gates, and escalation &mdash; at every maturity stage.
+      </div>
+    </div>
+    <div class="foot">
+      <span>Why a framework</span>
+      <div class="progress-track"><div class="progress-fill" style="width:10%"></div></div>
+    </div>
+  </section>
+
+  <!-- S3: CORE CONCEPTS -->
+  <section class="slide">
+    <div class="kicker">Core Concepts</div>
+    <h2>Three layers working together</h2>
+    <div class="body">
+      <div class="cards" style="grid-template-columns:repeat(3,1fr)">
+        <article class="card" style="border-color:rgba(92,234,255,0.3)">
+          <h3 style="color:var(--cyan)">Beads</h3>
+          <p>Structured work items with dependencies, acceptance criteria, and persistent state. Decomposition produces not just beads but a <strong>phased execution plan</strong> &mdash; ordered by the dependency graph. A contract, not a ticket.</p>
+        </article>
+        <article class="card" style="border-color:rgba(92,240,168,0.3)">
+          <h3 style="color:var(--green)">Agent Rules</h3>
+          <p>Enforced standards that cascade from org &rarr; team &rarr; repo. Test discipline, AC verification, evidence-based completion. Not optional guidance &mdash; operational guardrails.</p>
+        </article>
+        <article class="card" style="border-color:rgba(180,142,255,0.3)">
+          <h3 style="color:var(--violet)">Stringer</h3>
+          <p>Scans git history for codebase signals: churn hotspots, lottery risk, TODO clusters, duplication, vulnerabilities. Codebase archaeology &mdash; not usage analytics.</p>
+        </article>
+      </div>
+
+      <p class="subtitle" style="margin-top:0.6rem;margin-bottom:0.2rem"><strong>How work actually flows:</strong></p>
+      <div class="flow" style="flex-wrap:nowrap;max-width:100%;justify-content:space-between;gap:0.6rem">
+        <div class="flow-node" style="border-color:var(--amber);padding:0.45rem 0.9rem;font-size:0.85rem">Assigned</div>
+        <div class="flow-arr">&rarr;</div>
+        <div class="flow-loop" style="border-color:var(--cyan);background:rgba(92,234,255,0.03);flex:1">
+          <span class="flow-loop-label" style="color:var(--cyan)">Refine Loop</span>
+          <div class="flow-loop-inner" style="justify-content:center;gap:0.6rem">
+            <div class="flow-node" style="border-color:var(--cyan);padding:0.4rem 0.9rem;font-size:0.85rem">Decompose<br><small style="color:var(--ink-dim);font-size:0.72rem">beads, ACs, plan</small></div>
+            <div class="flow-arr" style="font-size:1rem">&hArr;</div>
+            <div class="flow-node" style="border-color:var(--amber);padding:0.4rem 0.9rem;font-size:0.85rem">Review<br><small style="color:var(--ink-dim);font-size:0.72rem">feedback / approve</small></div>
+          </div>
+        </div>
+        <div class="flow-arr">&rarr;</div>
+        <div class="flow-loop" style="flex:1">
+          <span class="flow-loop-label">Build + Verify Loop</span>
+          <div class="flow-loop-inner" style="justify-content:center;gap:0.6rem">
+            <div class="flow-node" style="border-color:var(--green);padding:0.4rem 0.9rem;font-size:0.85rem">Execute<br><small style="color:var(--ink-dim);font-size:0.72rem">per phased plan</small></div>
+            <div class="flow-arr" style="font-size:1rem">&rarr;</div>
+            <div class="flow-node" style="border-color:var(--green);padding:0.4rem 0.9rem;font-size:0.85rem">Self-Check<br><small style="color:var(--ink-dim);font-size:0.72rem">against ACs</small></div>
+          </div>
+        </div>
+        <div class="flow-arr">&rarr;</div>
+        <div class="flow-node" style="border-color:var(--amber);padding:0.45rem 0.9rem;font-size:0.85rem">Validate<br><small style="color:var(--ink-dim);font-size:0.72rem">at risk tier</small></div>
+      </div>
+    </div>
+    <div class="foot">
+      <span>Core concepts</span>
+      <div class="progress-track"><div class="progress-fill" style="width:20%"></div></div>
+    </div>
+  </section>
+
+  <!-- S4: WORK MODES -->
+  <section class="slide">
+    <div class="kicker">Key Distinction</div>
+    <h2>Agents are always in the room</h2>
+    <div class="body">
+      <div class="cmp">
+        <div class="cmp-col" style="border-color:rgba(255,203,87,0.3)">
+          <h3 style="color:var(--amber)">Human-Led, Agent-Advised</h3>
+          <ul>
+            <li>Product strategy &amp; prioritization</li>
+            <li>Ambiguous requirements decisions</li>
+            <li>Customer-sensitive approvals</li>
+            <li>Architecture trade-offs with org impact</li>
+          </ul>
+          <p style="color:var(--ink-dim);font-size:0.82rem;margin-top:0.4rem">Human decides. Agent surfaces blind spots, alternatives, and risks you didn't consider.</p>
+        </div>
+        <div class="cmp-col" style="border-color:rgba(92,234,255,0.3)">
+          <h3 style="color:var(--cyan)">Collaborative</h3>
+          <ul>
+            <li>Work decomposition</li>
+            <li>Architecture review</li>
+            <li>Tricky debugging</li>
+            <li>First-of-kind implementations</li>
+          </ul>
+          <p style="color:var(--ink-dim);font-size:0.82rem;margin-top:0.4rem">Agent does heavy lifting. Human steers direction and validates judgment calls.</p>
+        </div>
+        <div class="cmp-col" style="border-color:rgba(92,240,168,0.3)">
+          <h3 style="color:var(--green)">Agent-Led</h3>
+          <ul>
+            <li>Bounded implementation</li>
+            <li>Test writing</li>
+            <li>Refactors within patterns</li>
+            <li>Config, tooling, docs</li>
+          </ul>
+          <p style="color:var(--ink-dim);font-size:0.82rem;margin-top:0.4rem">Agent executes end-to-end. Human validates at the risk-appropriate tier.</p>
+        </div>
+      </div>
+      <div class="callout">
+        Doing anything without passing it by an agent is a missed opportunity. Everyone has blind spots &mdash; the question is who decides, not who participates.
+      </div>
+    </div>
+    <div class="foot">
+      <span>Work modes</span>
+      <div class="progress-track"><div class="progress-fill" style="width:30%"></div></div>
+    </div>
+  </section>
+
+  <!-- S5: CRAWL (NOW) -->
+  <section class="slide">
+    <div class="kicker">Maturity Model</div>
+    <h2><span class="phase-header" style="background:rgba(92,234,255,0.12);color:var(--cyan)">Crawl</span> &mdash; Where we are now</h2>
+    <div class="body">
+      <ul>
+        <li><strong>Humans define</strong> all features, priorities, and backlog in Jira</li>
+        <li>Work assigned to a developer who operates the <strong>multi-agent framework</strong></li>
+        <li>Agent <strong>proposes decomposition</strong> into beads with behavioral ACs and a <strong>phased execution plan</strong> ordered by the dependency graph; developer refines and approves</li>
+        <li>Agents <strong>execute beads</strong> and <strong>self-verify against ACs</strong> before presenting for human review</li>
+        <li>Developer <strong>validates outcomes</strong>, manages the repo (branching, PRs, EM review), and updates Jira &mdash; all agent-supported</li>
+        <li><strong class="v">Stringer</strong> scans codebases for risk signals; human triages findings into beads</li>
+      </ul>
+      <div class="callout" style="border-left-color:var(--amber);background:rgba(255,203,87,0.06)">
+        <strong>Agents make implementation decisions within guardrails.</strong> Humans make strategic decisions &mdash; but always with agent input. The agent is a collaborator with discipline, not autocomplete with a bigger context window.
+      </div>
+    </div>
+    <div class="foot">
+      <span>Crawl &mdash; current state</span>
+      <div class="progress-track"><div class="progress-fill" style="width:40%"></div></div>
+    </div>
+  </section>
+
+  <!-- S6: WALK (EARNED) -->
+  <section class="slide">
+    <div class="kicker">Maturity Model</div>
+    <h2><span class="phase-header" style="background:rgba(255,203,87,0.12);color:var(--amber)">Walk</span> &mdash; Expanding trust</h2>
+    <div class="body">
+      <ul>
+        <li>Agents execute <strong>low-risk beads autonomously</strong> &mdash; CI gates verify, human spot-checks</li>
+        <li><strong class="v">Stringer triage</strong> partially automated: signals &rarr; human review &rarr; beads &rarr; Jira sync</li>
+        <li>Agent-assisted <strong>decomposition becomes default</strong> for routine work</li>
+        <li>Jira tickets get <strong>larger</strong> &mdash; a ticket becomes a goal, beads become the tasks</li>
+      </ul>
+      <div class="cards" style="grid-template-columns:1fr 1fr;max-width:700px">
+        <article class="card" style="border-color:rgba(180,142,255,0.3)">
+          <h3 style="color:var(--violet)">Stringer Today</h3>
+          <p>Codebase signals: churn, lottery risk, TODOs, duplication, vulnerabilities, test gaps. Git history analysis.</p>
+        </article>
+        <article class="card" style="border-color:rgba(180,142,255,0.3)">
+          <h3 style="color:var(--violet)">Stringer Future</h3>
+          <p>Possible extension into product/usage signals. Clearly labeled as aspirational until data sources exist.</p>
+        </article>
+      </div>
+      <div class="callout">
+        <strong>Key constraint:</strong> Stringer signals go through human triage before Jira. No bulk import &mdash; 758 signals become 6 beads, not 758 draft tickets.
+      </div>
+    </div>
+    <div class="foot">
+      <span>Walk &mdash; earned trust</span>
+      <div class="progress-track"><div class="progress-fill" style="width:50%"></div></div>
+    </div>
+  </section>
+
+  <!-- S7: RUN (EARNED) -->
+  <section class="slide">
+    <div class="kicker">Maturity Model</div>
+    <h2><span class="phase-header" style="background:rgba(180,142,255,0.12);color:var(--violet)">Run</span> &mdash; Constrained autonomy</h2>
+    <div class="body">
+      <ul>
+        <li>Agents <strong>autonomously pick up and execute</strong> low- and medium-risk beads</li>
+        <li>Jira updated automatically with <strong>audit trail</strong> (who approved, why, traceability)</li>
+        <li>Humans approve <strong>high-risk work only</strong>; agent handles the rest end-to-end</li>
+      </ul>
+      <p class="subtitle" style="margin-top:0.3rem"><strong>What Run requires (and we don't have yet):</strong></p>
+      <div class="cards" style="grid-template-columns:1fr 1fr 1fr;max-width:900px">
+        <article class="card" style="border-color:rgba(255,107,122,0.3)">
+          <h3 style="color:var(--red)">Infrastructure</h3>
+          <p>Orchestration layer: scheduling, monitoring, stuck-agent detection, recovery. CI/CD for agent work.</p>
+        </article>
+        <article class="card" style="border-color:rgba(255,107,122,0.3)">
+          <h3 style="color:var(--red)">Coherence</h3>
+          <p>Shared guardrails at scale: agent rules, design docs, branch strategies. Autonomy without coherence is chaos.</p>
+        </article>
+        <article class="card" style="border-color:rgba(255,107,122,0.3)">
+          <h3 style="color:var(--red)">Evidence</h3>
+          <p>Measured outcomes from Crawl and Walk that prove agents can be trusted at this tier. Not a timeline &mdash; a gate.</p>
+        </article>
+      </div>
+      <div class="callout" style="border-left-color:var(--violet);background:rgba(180,142,255,0.06)">
+        Autonomy is easy. <strong>Coherent autonomy</strong> &mdash; where 5 agents don't build 5 different patterns &mdash; is the actual challenge.
+      </div>
+    </div>
+    <div class="foot">
+      <span>Run &mdash; constrained autonomy</span>
+      <div class="progress-track"><div class="progress-fill" style="width:60%"></div></div>
+    </div>
+  </section>
+
+  <!-- S8: RISK CLASSIFICATION -->
+  <section class="slide">
+    <div class="kicker">Governance</div>
+    <h2>Risk classification gates autonomy</h2>
+    <div class="body">
+      <table class="risk-table">
+        <thead>
+          <tr><th>Tier</th><th>Definition</th><th>Examples</th><th>Review Model</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="risk-badge risk-low">Low</span></td>
+            <td>No customer impact, reversible, established patterns, <strong>bounded scope</strong>, good test coverage</td>
+            <td>Refactors, test additions, internal tooling, docs, non-breaking dep bumps</td>
+            <td><strong>Agent executes &rarr; CI gate &rarr; auto-close</strong></td>
+          </tr>
+          <tr>
+            <td><span class="risk-badge risk-med">Medium</span></td>
+            <td>Customer-facing within existing architecture, moderate complexity, bounded blast radius</td>
+            <td>Bug fixes, config changes, UI updates following patterns</td>
+            <td><strong>Agent executes &rarr; CI gate &rarr; human spot-checks</strong></td>
+          </tr>
+          <tr>
+            <td><span class="risk-badge risk-high">High</span></td>
+            <td>New architecture, compliance-affecting, high complexity/novelty, or low coverage</td>
+            <td>New integrations, auth changes, schema migrations, first-of-kind patterns</td>
+            <td><strong>Agent executes &rarr; mandatory human review</strong></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p class="subtitle" style="margin-top:0.5rem"><strong>Risk axes:</strong> impact &middot; complexity &middot; scope (files/components touched) &middot; test coverage &middot; novelty &middot; ambiguity</p>
+
+      <div class="callout" style="border-left-color:var(--amber);background:rgba(255,203,87,0.06)">
+        <strong>Auto-escalation:</strong> No tests &rarr; bump a tier. Cross-repo touch &rarr; bump a tier. First-of-kind pattern &rarr; high by default.<br>
+        <strong>Who classifies?</strong> Developer sets initial risk at bead creation. Agent flags if scope grows beyond classification during execution.
+      </div>
+    </div>
+    <div class="foot">
+      <span>Risk classification</span>
+      <div class="progress-track"><div class="progress-fill" style="width:72%"></div></div>
+    </div>
+  </section>
+
+  <!-- S9: PHASE GATES -->
+  <section class="slide">
+    <div class="kicker">No Leaps of Faith</div>
+    <h2>Evidence earns advancement, not timelines</h2>
+    <div class="body">
+      <div class="gate-grid">
+        <div class="gh">&nbsp;</div>
+        <div class="gh">Crawl &rarr; Walk</div>
+        <div class="gh">Walk &rarr; Run</div>
+
+        <div class="gc" style="background:rgba(255,255,255,0.02);border-left:none"><strong class="g">Quality</strong></div>
+        <div class="gc">
+          <ul>
+            <li>Agent-produced beads pass ACs on first human review &gt;80% of the time</li>
+            <li>Rework rate below threshold</li>
+          </ul>
+        </div>
+        <div class="gc">
+          <ul>
+            <li>Low-risk beads pass CI + human spot-check &gt;95%</li>
+            <li>Zero critical defects from autonomous execution in trailing 4 weeks</li>
+          </ul>
+        </div>
+
+        <div class="gc" style="background:rgba(255,255,255,0.02);border-left:none"><strong class="a">Efficiency</strong></div>
+        <div class="gc">
+          <ul>
+            <li>Time-to-close on low-risk beads measurably faster than manual</li>
+            <li>Human review burden decreasing</li>
+          </ul>
+        </div>
+        <div class="gc">
+          <ul>
+            <li>Cost per bead trending down</li>
+            <li>Agent handles &gt;70% of low/medium work end-to-end</li>
+          </ul>
+        </div>
+
+        <div class="gc" style="background:rgba(255,255,255,0.02);border-left:none;border-bottom:none"><strong class="v">Infrastructure</strong></div>
+        <div class="gc" style="border-bottom:none">
+          <ul>
+            <li>Stringer triage workflow operational</li>
+            <li>Beads &harr; Jira sync reliable</li>
+          </ul>
+        </div>
+        <div class="gc" style="border-bottom:none">
+          <ul>
+            <li>Orchestration layer deployed</li>
+            <li>Stuck-agent detection + recovery operational</li>
+          </ul>
+        </div>
+      </div>
+      <div class="callout" style="margin-top:0.6rem">
+        <strong>Each phase gate is based on measured outcomes, not projections.</strong> If the numbers aren't there, we stay where we are.
+      </div>
+    </div>
+    <div class="foot">
+      <span>Phase gates</span>
+      <div class="progress-track"><div class="progress-fill" style="width:85%"></div></div>
+    </div>
+  </section>
+
+  <!-- S10: KEY PRINCIPLES -->
+  <section class="slide">
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center">
+      <div class="kicker">Closing</div>
+      <h2>Five principles</h2>
+      <div style="display:grid;gap:0.8rem;max-width:880px;margin-top:1rem">
+        <div style="display:flex;gap:0.8rem;align-items:baseline">
+          <span style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:var(--cyan);min-width:2rem">1</span>
+          <div>
+            <strong style="font-size:1.15rem">Human accountability at every phase</strong>
+            <p style="color:var(--ink-dim);font-size:0.95rem;margin-top:0.15rem">The loop widens but never disappears. Even in Run, humans own strategy, risk classification, and high-risk approvals.</p>
+          </div>
+        </div>
+        <div style="display:flex;gap:0.8rem;align-items:baseline">
+          <span style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:var(--cyan);min-width:2rem">2</span>
+          <div>
+            <strong style="font-size:1.15rem">Agents are collaborators with guardrails</strong>
+            <p style="color:var(--ink-dim);font-size:0.95rem;margin-top:0.15rem">They make implementation decisions within boundaries. Humans make strategic decisions. Neither works alone.</p>
+          </div>
+        </div>
+        <div style="display:flex;gap:0.8rem;align-items:baseline">
+          <span style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:var(--cyan);min-width:2rem">3</span>
+          <div>
+            <strong style="font-size:1.15rem">Risk classification gates autonomy</strong>
+            <p style="color:var(--ink-dim);font-size:0.95rem;margin-top:0.15rem">Agents earn trust through low/medium tiers before expanding scope. Impact, complexity, coverage, and novelty all count.</p>
+          </div>
+        </div>
+        <div style="display:flex;gap:0.8rem;align-items:baseline">
+          <span style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:var(--cyan);min-width:2rem">4</span>
+          <div>
+            <strong style="font-size:1.15rem">Jira remains the system of record</strong>
+            <p style="color:var(--ink-dim);font-size:0.95rem;margin-top:0.15rem">Beads are the execution layer beneath it. Stringer findings go through triage before Jira, never bulk-imported.</p>
+          </div>
+        </div>
+        <div style="display:flex;gap:0.8rem;align-items:baseline">
+          <span style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:var(--cyan);min-width:2rem">5</span>
+          <div>
+            <strong style="font-size:1.15rem">Capability gates, not calendar gates</strong>
+            <p style="color:var(--ink-dim);font-size:0.95rem;margin-top:0.15rem">Each phase is earned through measured outcomes &mdash; defect rate, AC pass rate, cost per bead. No leaps of faith.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="foot">
+      <span>Principles</span>
+      <div class="progress-track"><div class="progress-fill" style="width:100%"></div></div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+(function () {
+  const slides = Array.from(document.querySelectorAll(".slide"));
+  let idx = 0;
+
+  function show(n) {
+    n = Math.max(0, Math.min(n, slides.length - 1));
+    if (n === idx) return;
+    const dir = n > idx ? 1 : -1;
+    slides[idx].classList.remove("active");
+    slides[idx].style.transform = "translateY(" + (-dir * 12) + "px)";
+    idx = n;
+    slides[idx].style.transform = "translateY(" + (dir * 12) + "px)";
+    void slides[idx].offsetWidth;
+    slides[idx].classList.add("active");
+  }
+
+  document.addEventListener("keydown", function (e) {
+    if (["ArrowRight","PageDown"," ","Spacebar"].includes(e.key)) { e.preventDefault(); show(idx+1); }
+    else if (["ArrowLeft","PageUp"].includes(e.key))              { e.preventDefault(); show(idx-1); }
+    else if (e.key === "Home") show(0);
+    else if (e.key === "End")  show(slides.length-1);
+  });
+
+  document.addEventListener("click", function (e) {
+    if (e.target.closest("a, button, input, code")) return;
+    e.clientX > window.innerWidth * 0.5 ? show(idx+1) : show(idx-1);
+  });
+
+  let touchX = 0;
+  document.addEventListener("touchstart", function (e) { touchX = e.changedTouches[0].clientX; });
+  document.addEventListener("touchend", function (e) {
+    const dx = e.changedTouches[0].clientX - touchX;
+    if (Math.abs(dx) > 50) dx < 0 ? show(idx+1) : show(idx-1);
+  });
+})();
+</script>
+</body>
+</html>
