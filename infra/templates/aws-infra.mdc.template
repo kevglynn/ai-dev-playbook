@@ -1,0 +1,58 @@
+---
+description: AWS / cloud infrastructure context for this machine (fill in locally; do not commit secrets)
+globs:
+alwaysApply: true
+---
+
+# AWS Infrastructure Context
+
+> **How to use:** Copy this file to `aws-infra.mdc` in your instance **context directory** (or `~/.cursor/rules/`), replace `{{PLACEHOLDERS}}`, and pass `--context-dir` to `install-agent-tools.sh` or keep the file only on the instance.
+
+## Account & Region
+- **Account**: {{ACCOUNT_ID}}
+- **Region**: {{REGION}}
+- **IAM Role on EC2**: {{IAM_ROLE_NAME}}
+  - Managed policies: {{MANAGED_POLICIES}}
+  - Inline / custom: {{INLINE_OR_CUSTOM_POLICIES_SUMMARY}}
+
+## VPC Topology
+
+### {{PRIMARY_VPC_NAME}} ({{VPC_ID}}) — {{VPC_CIDR}}
+{{PRIMARY_VPC_DESCRIPTION}}
+
+| Subnet | AZ | CIDR | Default route | Notes |
+|--------|-----|------|---------------|-------|
+| {{SUBNET_1_ID}} | {{AZ_1}} | {{CIDR_1}} | {{ROUTE_1}} | {{NOTES_1}} |
+| {{SUBNET_2_ID}} | {{AZ_2}} | {{CIDR_2}} | {{ROUTE_2}} | {{NOTES_2}} |
+
+**Routing / connectivity notes:**
+- {{NAT_IGW_ASYMMETRY_OR_OTHER}}
+- VPN: {{VPN_SUMMARY_OR_NONE}}
+- VPC endpoints: {{VPC_ENDPOINTS_SUMMARY}}
+
+### {{OTHER_VPC_NAME}} ({{OTHER_VPC_ID}}) — {{OTHER_VPC_CIDR}}
+{{OTHER_VPC_NOTES}}
+
+## Active compute (EC2, ECS, Lambda — as relevant)
+
+| Name / role | ID | Type | Private IP / public | Purpose |
+|-------------|-----|------|---------------------|---------|
+| {{INSTANCE_NAME}} | {{INSTANCE_ID}} | {{INSTANCE_TYPE}} | {{IPS}} | {{PURPOSE}} |
+
+## Cross-instance SSH
+{{EC2_INSTANCE_CONNECT_OR_BASTION_NOTES}}
+
+## VPN / hybrid cloud
+{{VPN_TUNNELS_PEER_GCP_AZURE_ETC}}
+
+## Secrets / config stores (names only — no values)
+{{SECRETS_MANAGER_OR_SSM_REFERENCES}}
+
+## Open investigations (Beads / tickets)
+{{OPEN_ITEMS}}
+
+## Security notes & findings
+{{SECURITY_FINDINGS}}
+
+## Cost / cleanup notes
+{{COST_NOTES}}
