@@ -13,6 +13,9 @@ If you're new to this, go in this order:
 | 3 | [Solutions Tech Pod Framework](solutions-tech-pod-agentic-dev-framework.html) | How Solutions is adopting this. Crawl/Walk/Run maturity model, work modes, risk classification, phase gates. The team-level adoption playbook. | ~8 min |
 | 4 | [Org Operating Model](org-agentic-dev-operating-model.html) | The full org-scale framework. 6 design decisions (decomposition, assignment, coherence, testing, review, tracking), the end-to-end pipeline, pilot plan, and rollout phases. This is the CTO-level deck. | ~15 min |
 | 5 | [Executive Summary](executive-summary.md) | One-page written summary of the org operating model. Same content as deck #4 but in prose — good for async review or pasting into a doc. | ~5 min |
+| 6 | [EC2 agent setup](../infra/runbooks/ec2-agent-setup.md) | Bootstrap agent tooling on EC2: Git SSH keys, IAM, `install-agent-tools.sh`, verify `bd`/Cursor, Instance Connect. | ~15 min |
+| 7 | [VPC assessment](../infra/runbooks/vpc-assessment.md) | Map VPCs/subnets/routing/instances from inside an EC2; document in `aws-infra.mdc`. | ~20 min |
+| 8 | [Infra common fixes](../infra/runbooks/common-fixes.md) | Gotchas: Anaconda vs yum, ed25519, ICU/beads, `BEADS_DIR`, Jupyter `@reboot`, Instance Connect timing. | ~5 min |
 
 ## Reference
 
@@ -20,6 +23,11 @@ If you're new to this, go in this order:
 |----------|-----------|
 | [Glossary](glossary.md) | Plain-English definitions of all terminology: beads, ACs, stringer, lottery risk, hotspots, orchestration, etc. |
 | [Confluence Orientation Draft](confluence-orientation-draft.md) | Draft of the ADC Confluence space orientation page. Covers setup steps, philosophy, and links to all three community resources (repo, Jira board, Confluence). |
+| [EC2 agent setup](../infra/runbooks/ec2-agent-setup.md) | End-to-end bootstrap for agent EC2s (scripts under `infra/bootstrap/`). |
+| [VPC assessment](../infra/runbooks/vpc-assessment.md) | CLI-oriented methodology for VPC discovery and documentation. |
+| [Infra common fixes](../infra/runbooks/common-fixes.md) | Troubleshooting notebook for AL2023 + beads + SSH. |
+| [aws-infra template](../infra/templates/aws-infra.mdc.template) | Fill-in-the-blanks Cursor rule for cloud context (copy locally, do not commit secrets). |
+| [Scratchpad template](../infra/templates/scratchpad-template.md) | Section structure for `.cursor/scratchpad.md` on instances. |
 
 ## Key concepts (30-second version)
 
