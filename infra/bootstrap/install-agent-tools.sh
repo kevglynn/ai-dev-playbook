@@ -4,10 +4,7 @@ set -euo pipefail
 # Agent tooling bootstrap for Linux EC2 (or similar) dev machines.
 # Installs: Go, Dolt, Beads (bd), git + beads init, Cursor integration.
 #
-# Usage:
-#   ./install-agent-tools.sh [options]
-#
-# Options:
+# Options (see --help):
 #   --context-dir DIR   Copy aws-infra.mdc and/or scratchpad.md from DIR into ~/.cursor/
 #                       (instance-specific; not committed to the playbook repo)
 #   --home-dir DIR      Home directory for git/beads init (default: $HOME)
