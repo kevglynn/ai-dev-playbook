@@ -33,9 +33,24 @@ All worktrees share a single beads database via a redirect file (`.beads/redirec
 
 **How it works:** Cursor-created worktrees run a `postCreate` hook (`.cursor/worktrees.json`) that creates the redirect automatically. No manual setup needed.
 
-**If `bd list` fails in a worktree:** The hook may not have fired. Run `bash scripts/setup-worktree.sh` manually from the worktree root.
+**If `bd list` fails in a worktree:** Run `bd doctor --agent` for diagnostics with remediation commands. Alternatively, run `bash scripts/setup-worktree.sh` manually from the worktree root.
 
 **Do not run `bd init` in worktrees.** That creates a separate isolated database, which is the opposite of the shared model. If a worktree already has a local DB from a previous `bd init`, the setup script will detect it and warn — follow its instructions to migrate.
+
+## Native beads worktree management
+
+Beads has built-in worktree support:
+- `bd worktree create <name>` — creates worktree with automatic beads redirect
+- `bd worktree list` — list all git worktrees
+- `bd worktree info` — show current worktree details
+- `bd worktree remove <name>` — remove with safety checks
+- `bd where` — show active beads location (useful for debugging redirects)
+
+This project uses the `scripts/setup-worktree.sh` approach via Cursor's `postCreate` hook, which is equivalent. For manual worktree creation outside Cursor, prefer `bd worktree create` over raw `git worktree add`.
+
+## Fresh clone setup
+
+For new clones or when the beads DB is missing: `bd bootstrap` auto-detects the right setup action (non-destructive). Prefer this over `bd init` which is for first-time initialization only.
 
 ## Worktree checklist
 

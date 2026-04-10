@@ -18,7 +18,15 @@ Every bead must be self-contained — a developer picking it up cold, without sc
 
 ### Acceptance Criteria (`--acceptance`)
 
-Required for **bug**, **feature**, and **task** beads. Use `bd create --acceptance "..."`.
+Required for **bug**, **feature**, **task**, **story**, and **spike** beads. Epics require **Success Criteria** instead. Use `bd create --acceptance "..."`.
+
+| Type | Section name | What to specify |
+|------|-------------|-----------------|
+| bug | Acceptance Criteria | The fixed behavior |
+| feature/task/story | Acceptance Criteria | Observable outcomes |
+| spike | Acceptance Criteria | Questions to answer, timebox |
+| epic | Success Criteria | Conditions for closing the epic |
+| chore/decision/milestone | — | ACs optional |
 
 - Bullet points using behavioral language (should/shows/returns/renders)
 - Describe **observable outcomes**, not implementation steps
@@ -30,7 +38,7 @@ Add a "Non-goals:" line in the description to prevent agent scope creep. State w
 
 ## Validation
 
-Run `bd lint` to check open beads for missing required sections. It enforces ACs on bug/feature/task types.
+Run `bd lint` to check open beads for missing required sections. Enable auto-validation with `bd config set validation.on-create warn` to catch quality issues at creation time. Use `bd create --dry-run` to preview before creating.
 
 ## Example
 
@@ -44,6 +52,20 @@ bd create "Add loading indicators to beads-ui tab switching" \
   --acceptance="Switching to an unloaded tab shows a loading indicator, not 'No issues'. Tab with zero real issues still shows 'No issues' after load completes. Loading indicator disappears within 1s of data arriving." \
   -t feature -p 1
 ```
+
+## Parent-child structure
+
+Use `--parent` for hierarchical issues under an epic:
+
+```bash
+bd create "Sub-task A" --parent=bd-epic-123 --type=task
+```
+
+Children get auto-generated hierarchical IDs (e.g., `bd-epic-123.1`). Prefer `--parent` over standalone `bd dep add` for true containment relationships. Check epic progress with `bd epic status <id>`.
+
+## Ephemeral issues (wisps)
+
+Use `--ephemeral` for short-lived tracking that doesn't warrant permanent storage: agent heartbeats, exploratory investigation notes, temporary coordination signals. Wisps are subject to TTL compaction and excluded from exports. To promote a wisp to a permanent bead: `bd promote <wisp-id> --reason "..."`.
 
 ## When closing beads
 

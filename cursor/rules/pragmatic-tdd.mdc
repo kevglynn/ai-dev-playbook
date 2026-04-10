@@ -30,6 +30,18 @@ This is the single highest-value form of TDD. A test that reproduces the bug pro
 4. Verify all behavioral tests still pass
 The behavior shouldn't change — only the structure. Tests prove that.
 
+### Story beads — same as feature beads
+ACs become tests. Treat stories identically to feature beads.
+
+### Spike beads — document findings, tests optional
+Spikes are timeboxed investigations. The deliverable is knowledge, not code. If the spike produces prototype code that gets promoted to a feature, apply the feature test policy to the promoted work. If the spike is purely investigative, no tests required — the close reason documents findings.
+
+### Decision / milestone beads — no tests required
+Decisions are architecture decision records (ADRs). Milestones mark completion of related issues. Neither produces testable code.
+
+### Epic beads — no direct tests
+Epics are containers. Test policies apply to children, not the epic itself.
+
 ### Chore / config / docs beads — no tests required
 Config changes, dependency updates, documentation, tooling. A test here is noise.
 

@@ -7,7 +7,7 @@ alwaysApply: true
 
 ## When picking up a bead — JIT verification
 
-Before writing any code, verify that the bead's description matches reality:
+Before writing any code, check what you're working on (`bd show --current`) and verify that the bead's description matches reality:
 
 - Do the files and paths mentioned still exist?
 - Do the APIs, interfaces, or patterns described still match the current codebase?
@@ -38,11 +38,21 @@ Every close reason must include evidence mapped to acceptance criteria:
 |-----------|------------------|
 | Bug | Test output showing bug is reproduced and fixed |
 | Feature | Test output or manual verification notes per AC |
+| Story | Test output or manual verification per AC (same as feature) |
+| Spike | Summary of findings; whether the question was answered |
 | Refactor | Build/lint clean, existing behavioral tests pass |
 | Chore/config | Brief summary of what was done |
 | Docs | "N/A — documentation update, no verification needed" |
+| Decision | "N/A — decision record, no verification needed" |
+| Milestone | "N/A — milestone marker, verify children are closed" |
+| Epic | "N/A — container, verify all children closed via `bd epic close-eligible`" |
 
 See `beads-quality.mdc` for close reason format and examples.
+
+## After closing — workflow continuation
+
+- `bd close <id> --reason "..." --suggest-next` — shows newly unblocked issues after close
+- `bd close <id> --reason "..." --claim-next` — auto-claims the next highest-priority ready issue
 
 ## Knowledge capture — `bd remember`
 
@@ -84,9 +94,13 @@ If yes, remember. If no, skip.
 ### Requirements
 
 - **Always use `--key`** with a descriptive kebab-case identifier (`<area>-<topic>`). This enables deduplication and future pruning. Never rely on auto-generated keys from content.
-- **Check before creating.** Scan `bd prime` output for existing memories on the same topic. Update an existing key rather than creating a parallel entry.
+- **Check before creating.** Run `bd memories <keyword>` to search for existing memories on the same topic. Update with `bd remember --key <existing-key> "corrected info"` rather than creating a parallel entry.
 - **One memory per bead, max.** If you're capturing more than two, the bead was probably too large or you're recording progress notes.
 
 ### Staleness
 
-If `bd prime` injects a memory that contradicts what you observe in the codebase, update or remove the stale memory immediately — do not work around it silently. Use `bd remember --key <existing-key> "corrected info"` to overwrite.
+If `bd prime` injects a memory that contradicts what you observe in the codebase, update or remove the stale memory immediately — do not work around it silently. Use `bd remember --key <existing-key> "corrected info"` to overwrite, or `bd forget <key>` to remove entirely.
+
+## Progress tracking during work
+
+Use `bd note <id> "progress update"` to append implementation notes to the bead's notes field (persistent, visible in `bd show`). Use `bd comment <id> "observation"` for timestamped discussion entries. Notes record decisions; comments record conversation. This keeps context attached to the work item rather than only in the scratchpad.

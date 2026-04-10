@@ -3,6 +3,7 @@ title: "AI-Native Dev Playbook"
 goal: "Single distributable package for AI-native development — clone, sync, and have a working agentic dev environment with no tribal knowledge required"
 status: active
 beads:
+  - ai-dev-playbook-mvr
   - ai-dev-playbook-fw6
   - ai-dev-playbook-qiu
   - ai-dev-playbook-0gi
@@ -26,16 +27,18 @@ This repo is the single distributable package for AI-native development at Pryon
 
 ### 1. Agent rules (shipping)
 
-Six `.mdc` rules in `cursor/rules/`, synced to all project repos via `sync-cursor-rules.sh`.
+Eight `.mdc` rules in `cursor/rules/`, synced to all project repos via `sync-cursor-rules.sh`.
 
 | Rule | Status |
 |------|--------|
-| `beads-quality.mdc` | Shipping — bead creation standards, `--acceptance` required |
-| `pragmatic-tdd.mdc` | Shipping — signal-first TDD by bead type |
-| `bead-completion.mdc` | Shipping — JIT verification, self-review against ACs |
+| `operating-model.mdc` | Updated 2026-04-10 — modernized for bd 1.0.0 (--claim, session lifecycle, query, graph, defer, hygiene) |
+| `beads-quality.mdc` | Updated 2026-04-10 — expanded type coverage, parent-child, ephemeral, validation config |
+| `bead-completion.mdc` | Updated 2026-04-10 — new type evidence table, close shortcuts, memory commands, note/comment |
+| `pragmatic-tdd.mdc` | Updated 2026-04-10 — added spike, story, decision, milestone, epic type policies |
+| `worktree-awareness.mdc` | Updated 2026-04-10 — native bd worktree commands, bd bootstrap, bd doctor --agent |
 | `design-docs.mdc` | Shipping — committed specs for 3+ beads or high-risk areas |
-| `worktree-awareness.mdc` | Shipping — updated to shared-DB-via-redirect model (2026-04-03) |
 | `multi-agent-review.mdc` | Shipping — two-tier review protocol |
+| `agent-identity.mdc` | Shipping — no human-baseline estimation |
 
 **Next:** Add Claude Code equivalents alongside Cursor rules (`ai-dev-playbook-vwq`).
 
@@ -70,7 +73,21 @@ The playbook needs to be self-explanatory for team members who weren't in the ro
 | `ai-dev-playbook-5vs` | P1 | Open — Set up bd/Jira sync with PC project |
 | `ai-dev-playbook-wv1` | P3 | Open — Add contribution guide for team members |
 
-### 5. Skills and tooling (open)
+### 5. Rules modernization for bd v1.0.0 (done — `ai-dev-playbook-mvr`)
+
+A 5-model comparative audit (GPT, Sonnet, Composer, Opus, Codex) found the rules only covered ~18% of bd's v1.0.0 capabilities, with 1 critical inaccuracy (`--status=in_progress` vs `--claim`) and significant gaps across all rule files. Modernized 5 rules in a single pass:
+
+| Change | Rule |
+|--------|------|
+| `--claim` replaces `--status=in_progress`, session lifecycle, query, graph, defer, hygiene | `operating-model.mdc` |
+| New types, epic ACs, parent-child, ephemeral, validation config | `beads-quality.mdc` |
+| New type evidence table, close shortcuts, memory commands, note/comment | `bead-completion.mdc` |
+| Spike, story, decision, milestone, epic test policies | `pragmatic-tdd.mdc` |
+| Native bd worktree commands, bd bootstrap, bd doctor --agent | `worktree-awareness.mdc` |
+
+Future: molecules/formulas/gates rules when adopted; integration sync rules when Jira sync goes live.
+
+### 6. Skills and tooling (open)
 
 Agent skills are reusable capability packages. The playbook should curate a library of proven skills for the team.
 
@@ -84,6 +101,7 @@ Decisions made during planning and implementation, with rationale. Newest first.
 
 | Date | Decision | Rationale |
 |------|----------|-----------|
+| 2026-04-10 | **Modernize all rules for bd v1.0.0** | 5-model comparative audit found ~18% capability coverage and 1 critical inaccuracy. Updated 5 of 8 rules. Deferred molecules/formulas/gates until adopted. |
 | 2026-04-03 | **Shared beads DB via redirect, not per-worktree `bd init`** | Per-worktree DBs fragment task state. Redirect uses beads' own mechanism. All worktrees see the same beads. |
 | 2026-04-03 | **Absolute paths in `.beads/redirect`** | Simpler than relative paths, eliminates python3 dependency. Redirect file is gitignored (machine-local), so absolute is safe. Verified working with bd 0.61.0. |
 | 2026-04-03 | **`git rev-parse --git-common-dir` for main-repo detection** | Deterministic and git-guaranteed. The alternative (`git worktree list --porcelain \| head -1`) depends on output ordering. |
@@ -101,3 +119,4 @@ Decisions made during planning and implementation, with rationale. Newest first.
 4. **Claude Code rules** (`ai-dev-playbook-vwq`) — The playbook is Cursor-first but the operating model is tool-agnostic. Claude Code equivalents make that real.
 5. **Skills library** (`ai-dev-playbook-n0v`) — Curate and document the proven agent skills for team use.
 6. **Contribution guide** (`ai-dev-playbook-wv1`) — How to add rules, propose changes, and maintain the playbook as a team.
+7. **Advanced beads rules** (future) — Molecules/formulas/gates when adopted; integration sync rules when Jira sync goes live; custom statuses if multi-step pipeline adopted.
