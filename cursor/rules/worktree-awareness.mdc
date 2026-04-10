@@ -24,23 +24,26 @@ If other agents or reviewers need to see your work:
 - Do not wait until work is "done" to commit. Uncommitted files are invisible to collaborators in other worktrees.
 - Spec files, runbooks, and design docs especially — these are useless if only you can see them.
 
-## Beads DB is per-worktree
+## Beads DB is shared across worktrees
 
-Each worktree has its own `.beads/` directory with its own Dolt server instance. This means:
-- `bd list` in worktree A shows different state than `bd list` in worktree B
-- A bead created in one worktree does not automatically appear in another
-- "Database not found" errors usually mean `bd init` was never run in that worktree
+All worktrees share a single beads database via a redirect file (`.beads/redirect`) that points to the main repo's `.beads/` directory. This means:
+- `bd list` returns the same beads in every worktree
+- A bead created in any worktree is visible to all others
+- There is one Dolt server instance, not one per worktree
 
-If beads state is critical for a handoff, note the worktree path and bead IDs explicitly. Do not assume the recipient can query the same bead DB.
+**How it works:** Cursor-created worktrees run a `postCreate` hook (`.cursor/worktrees.json`) that creates the redirect automatically. No manual setup needed.
+
+**If `bd list` fails in a worktree:** The hook may not have fired. Run `bash scripts/setup-worktree.sh` manually from the worktree root.
+
+**Do not run `bd init` in worktrees.** That creates a separate isolated database, which is the opposite of the shared model. If a worktree already has a local DB from a previous `bd init`, the setup script will detect it and warn — follow its instructions to migrate.
 
 ## Worktree checklist
 
 When starting work in a worktree:
 - [ ] Confirm `.cursor/rules/` has the expected rule files
-- [ ] Confirm `bd list` works (run `bd init` if not)
+- [ ] Confirm `bd list` works (if not, run `bash scripts/setup-worktree.sh`)
 - [ ] Pull latest from the branch you need (`git pull` or `git checkout <branch>`)
 
 When handing off or requesting review:
 - [ ] Commit all artifacts the reviewer needs to see
 - [ ] Note which worktree path the work lives in
-- [ ] If beads were created/updated, note the bead IDs and worktree

@@ -124,6 +124,10 @@ When closing a bead that triggered multi-agent review, the `bd close --reason` m
 - Whether Tier 2 was completed, deferred (with tracking bead ID), or not required
 - This is in addition to the AC-mapped evidence required by `bead-completion.mdc`
 
+## Knowledge capture from review findings
+
+When a Tier 1 or Tier 2 finding reveals a **pattern-level insight** — not a localized bug, but a systemic pattern like hidden coupling, an undocumented convention, or a recurring architectural anti-pattern — capture it with `bd remember --key <area>-<topic>` after the finding is resolved. These are high-signal memories because they represent knowledge the implementing agent didn't already have.
+
 ## Tracking
 
 All deferred findings — from both tiers — must be captured as beads with proper descriptions and acceptance criteria per `beads-quality.mdc`.

@@ -1,5 +1,5 @@
 ---
-description: How agents pick up, verify, and close beads — JIT verification, self-review against ACs, and evidence policy.
+description: How agents pick up, verify, and close beads — JIT verification, self-review against ACs, evidence policy, and bd remember knowledge capture.
 alwaysApply: true
 ---
 
@@ -43,3 +43,50 @@ Every close reason must include evidence mapped to acceptance criteria:
 | Docs | "N/A — documentation update, no verification needed" |
 
 See `beads-quality.mdc` for close reason format and examples.
+
+## Knowledge capture — `bd remember`
+
+After closing a bead, pause: did this work surface something a future agent would
+otherwise have to rediscover? If so, capture it before moving on.
+
+Most bead closures produce **no memory** — this step is for the exceptions.
+
+```bash
+bd remember "AccountService.sync silently skips soft-deleted records — \
+  the WHERE clause in account_repo.rb:47 filters them with no error" \
+  --key account-sync-soft-deletes
+```
+
+### When to remember
+
+- A fix that required non-obvious investigation (the root cause wasn't where you first looked)
+- A codebase pattern not apparent from reading the code ("module X is called by a background job, not the controller")
+- A corrected assumption — something you got wrong that cost investigation time
+- A library/config quirk or environment-specific behavior not in docs
+- A misleading error message where the real cause was different from what the error suggested
+
+### When NOT to remember
+
+- Task-specific progress notes (that's the scratchpad)
+- Anything already codified in a `.cursor/rules/` file
+- Obvious facts derivable from the code or docs
+- Temporary workarounds (create a follow-up bead instead)
+- Performance numbers or benchmarks (too volatile)
+- Speculative improvements ("this could be refactored to use X")
+
+### Litmus test
+
+> Would a fresh agent, starting a new session with no prior context, waste
+> significant time or make a wrong assumption without this knowledge?
+
+If yes, remember. If no, skip.
+
+### Requirements
+
+- **Always use `--key`** with a descriptive kebab-case identifier (`<area>-<topic>`). This enables deduplication and future pruning. Never rely on auto-generated keys from content.
+- **Check before creating.** Scan `bd prime` output for existing memories on the same topic. Update an existing key rather than creating a parallel entry.
+- **One memory per bead, max.** If you're capturing more than two, the bead was probably too large or you're recording progress notes.
+
+### Staleness
+
+If `bd prime` injects a memory that contradicts what you observe in the codebase, update or remove the stale memory immediately — do not work around it silently. Use `bd remember --key <existing-key> "corrected info"` to overwrite.
