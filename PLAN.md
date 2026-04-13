@@ -9,11 +9,18 @@ beads:
   - ai-dev-playbook-0gi
   - ai-dev-playbook-5vs
   - ai-dev-playbook-vwq
+  - ai-dev-playbook-vwq.1
+  - ai-dev-playbook-vwq.2
+  - ai-dev-playbook-vwq.3
+  - ai-dev-playbook-vwq.4
+  - ai-dev-playbook-vwq.5
+  - ai-dev-playbook-vwq.6
   - ai-dev-playbook-n0v
   - ai-dev-playbook-wv1
 success_criteria:
   - "A new team member can clone this repo, run sync, and have a working agentic dev environment"
   - "Agent rules, worktree automation, and documentation are shipping and maintained"
+  - "Cursor and Claude Code users benefit equally from the same canonical rules"
   - "Jira and beads are connected for leadership visibility"
 ---
 
@@ -40,7 +47,7 @@ Eight `.mdc` rules in `cursor/rules/`, synced to all project repos via `sync-cur
 | `multi-agent-review.mdc` | Shipping — two-tier review protocol |
 | `agent-identity.mdc` | Shipping — no human-baseline estimation |
 
-**Next:** Add Claude Code equivalents alongside Cursor rules (`ai-dev-playbook-vwq`).
+**Next:** Cross-tool rule support — see workstream 7.
 
 ### 2. Worktree automation (shipping)
 
@@ -95,12 +102,51 @@ Agent skills are reusable capability packages. The playbook should curate a libr
 |------|----------|--------|
 | `ai-dev-playbook-n0v` | P2 | Open — Curate shared skills library |
 
+### 7. Cross-tool rule support (`ai-dev-playbook-vwq`)
+
+The playbook is Cursor-first but the operating model is tool-agnostic. A 6-model comparative review (Codex, GPT, Opus, Sonnet, Composer, Gemini) converged on an architecture that extends the existing sync script rather than building a new pipeline. Key finding: a content audit of all 8 rules showed 4 of 8 are fully tool-agnostic, and only ~35 lines out of 629 total contain Cursor-specific references.
+
+**Architecture (converged):** Keep `.mdc` as source of truth. Extend `sync-cursor-rules.sh` with `--format claude` to strip YAML frontmatter and emit standalone markdown files. No manifest, no separate build pipeline, no injection into existing `CLAUDE.md` files.
+
+#### Phase 1 — ship Claude Code parity
+
+| Bead | Task | Status |
+|------|------|--------|
+| `ai-dev-playbook-vwq` | Epic: cross-tool rule support | Open |
+| `ai-dev-playbook-vwq.1` | Content audit + neutralize ~35 Cursor-specific lines across 4 rules; fix frontmatter; generalize references | Open |
+| `ai-dev-playbook-vwq.2` | Extend sync script with `--format claude`; `--check` for Claude drift; config migration | Open (blocked by .1) |
+| `ai-dev-playbook-vwq.3` | Update QUICKSTART.md, README.md for multi-tool story | Open (blocked by .2) |
+
+**Content audit results (6-model verified):**
+
+| Rule | Cursor-specific? | Action needed |
+|------|-------------------|---------------|
+| `agent-identity.mdc` | None | Emit as-is |
+| `design-docs.mdc` | None | Emit as-is |
+| `pragmatic-tdd.mdc` | None | Emit as-is |
+| `beads-quality.mdc` | None | Emit as-is |
+| `bead-completion.mdc` | 1 line (`.cursor/rules/` ref) | Trivial generalization |
+| `operating-model.mdc` | 4 lines (hierarchy, scratchpad, `bd setup cursor`) | Generalize to tool-neutral phrasing |
+| `multi-agent-review.mdc` | ~25 lines (Tier 1 assumes parallel subagents) | Generalize review dispatch to work across tools |
+| `worktree-awareness.mdc` | ~10 lines + missing frontmatter | Separate Cursor-specific setup from generic git-worktree + beads concepts |
+
+#### Phase 2 — scale when needed (deferred)
+
+| Bead | Task | Trigger |
+|------|------|---------|
+| `ai-dev-playbook-vwq.4` | `manifest.yaml` + rule profiles | When teams need per-repo rule subsets (e.g. `slim` vs `full`) |
+| `ai-dev-playbook-vwq.5` | `AGENTS.md` generation | When a Codex/Copilot consumer exists |
+| `ai-dev-playbook-vwq.6` | Optional `CLAUDE.md` injection with markers | When teams standardize on single-file Claude instructions |
+
 ## Decisions log
 
 Decisions made during planning and implementation, with rationale. Newest first.
 
 | Date | Decision | Rationale |
 |------|----------|-----------|
+| 2026-04-13 | **Extend sync script, not separate build pipeline** | 6-model review converged: `.mdc` stays source of truth; `--format claude` flag strips frontmatter and emits standalone markdown. Manifest + multi-emitter build deferred until per-repo profiles are needed. Content audit found only ~35/629 lines are Cursor-specific — architecture should be proportional. |
+| 2026-04-13 | **Standalone Claude files, not injection into CLAUDE.md** | Injection into existing `CLAUDE.md` with sed/markers is fragile (rules contain `$`, backticks, pipe characters). Standalone files under `claude/rules/` are merge-friendly, reviewable, and sidestep the injection problem entirely. |
+| 2026-04-13 | **Defer AGENTS.md, manifest.yaml, and profiles** | No current Codex/Copilot consumer. Manifest adds complexity for 8 uniformly-structured files. Design allows adding both later without rework. |
 | 2026-04-10 | **Modernize all rules for bd v1.0.0** | 5-model comparative audit found ~18% capability coverage and 1 critical inaccuracy. Updated 5 of 8 rules. Deferred molecules/formulas/gates until adopted. |
 | 2026-04-03 | **Shared beads DB via redirect, not per-worktree `bd init`** | Per-worktree DBs fragment task state. Redirect uses beads' own mechanism. All worktrees see the same beads. |
 | 2026-04-03 | **Absolute paths in `.beads/redirect`** | Simpler than relative paths, eliminates python3 dependency. Redirect file is gitignored (machine-local), so absolute is safe. Verified working with bd 0.61.0. |
@@ -113,10 +159,11 @@ Decisions made during planning and implementation, with rationale. Newest first.
 
 ## What's next (prioritized)
 
-1. **Confluence orientation** (`ai-dev-playbook-fw6`, `ai-dev-playbook-qiu`) — The ai-dev-community space needs a landing page that's aspirational, not just procedural.
-2. **Onboarding guide** (`ai-dev-playbook-0gi`) — Step-by-step guide for a new team member adopting the playbook. Should reference worktree setup after the recent changes.
-3. **Jira sync** (`ai-dev-playbook-5vs`) — Connect beads to the PC Jira project so agent-level work is visible in sprint boards.
-4. **Claude Code rules** (`ai-dev-playbook-vwq`) — The playbook is Cursor-first but the operating model is tool-agnostic. Claude Code equivalents make that real.
+1. **Cross-tool rule support — Phase 1** (`ai-dev-playbook-vwq`) — Content audit, neutralize Cursor-specific lines, extend sync script with `--format claude`, emit standalone Claude markdown. In progress.
+2. **Confluence orientation** (`ai-dev-playbook-fw6`, `ai-dev-playbook-qiu`) — The ai-dev-community space needs a landing page that's aspirational, not just procedural.
+3. **Onboarding guide** (`ai-dev-playbook-0gi`) — Step-by-step guide for a new team member adopting the playbook. Should reference worktree setup and multi-tool sync after the recent changes.
+4. **Jira sync** (`ai-dev-playbook-5vs`) — Connect beads to the PC Jira project so agent-level work is visible in sprint boards.
 5. **Skills library** (`ai-dev-playbook-n0v`) — Curate and document the proven agent skills for team use.
 6. **Contribution guide** (`ai-dev-playbook-wv1`) — How to add rules, propose changes, and maintain the playbook as a team.
-7. **Advanced beads rules** (future) — Molecules/formulas/gates when adopted; integration sync rules when Jira sync goes live; custom statuses if multi-step pipeline adopted.
+7. **Cross-tool rule support — Phase 2** (deferred) — manifest.yaml + profiles, AGENTS.md generation, optional CLAUDE.md injection. Triggered by per-repo subset needs or new tool consumers.
+8. **Advanced beads rules** (future) — Molecules/formulas/gates when adopted; integration sync rules when Jira sync goes live; custom statuses if multi-step pipeline adopted.
