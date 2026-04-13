@@ -37,17 +37,17 @@ Tier 1 supplements the self-review — it does not replace it.
 
 ## Tier 1: Same-model multi-lens review (agent does this autonomously)
 
-After the self-review step, the agent launches **three review subagents** in parallel:
+After the self-review step, the agent performs **three independent review passes** with distinct lenses. If the tool supports parallel subagents or review agents, launch them concurrently; otherwise, run sequentially:
 
-| Subagent type | Focus | Catches |
+| Review lens | Focus | Catches |
 |---|---|---|
 | `code-reviewer` | Correctness, edge cases, race conditions, error paths | Logic bugs, state management issues, missing guards |
 | `architect-reviewer` | Pattern consistency, component boundaries, reusability | Architectural drift, duplication, wrong abstractions |
 | `simplify` | Over-engineering, unnecessary complexity, premature abstraction | Gold-plating, dead code, abstractions without consumers |
 
-### Context to pass each subagent
+### Context for each review pass
 
-Each subagent must receive:
+Each review pass must include:
 1. The **bead description and acceptance criteria** (from `bd show <id>`)
 2. The **full file contents** of all changed/created files
 3. The **bead type** (feature/refactor/bug) to calibrate review depth

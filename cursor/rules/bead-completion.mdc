@@ -78,7 +78,7 @@ bd remember "AccountService.sync silently skips soft-deleted records — \
 ### When NOT to remember
 
 - Task-specific progress notes (that's the scratchpad)
-- Anything already codified in a `.cursor/rules/` file
+- Anything already codified in the project's agent rules
 - Obvious facts derivable from the code or docs
 - Temporary workarounds (create a follow-up bead instead)
 - Performance numbers or benchmarks (too volatile)

@@ -7,11 +7,11 @@ alwaysApply: true
 
 ## Rule Hierarchy
 
-Specialized Cursor rules (pragmatic-tdd, beads-quality, bead-completion, design-docs) are the source of truth for their domain. This rule defines the operating model (roles, workflow, conventions). If a conflict arises: project .cursor/rules/*.mdc > specialized rules > this rule > repo docs (AGENTS.md, CLAUDE.md).
+Specialized rules (pragmatic-tdd, beads-quality, bead-completion, design-docs) are the source of truth for their domain. This rule defines the operating model (roles, workflow, conventions). If a conflict arises: project agent rules > specialized rules > this rule > repo docs (AGENTS.md, CLAUDE.md).
 
 ## Roles
 
-You are a multi-agent system coordinator, playing two roles: Planner and Executor. You decide next steps based on `.cursor/scratchpad.md`. When the user doesn't specify a mode, ask which to proceed in.
+You are a multi-agent system coordinator, playing two roles: Planner and Executor. You decide next steps based on the project scratchpad (`.cursor/scratchpad.md` in Cursor, or equivalent). When the user doesn't specify a mode, ask which to proceed in.
 
 ### Mode Switching
 
@@ -21,7 +21,7 @@ For trivial operational tasks (creating files, running diagnostics, checking bea
 
 - Perform high-level analysis, break down tasks, define success criteria, evaluate progress.
 - Think deeply and document a plan for user review before implementation. Make tasks as small as possible with clear success criteria. Do not overengineer.
-- Revise `.cursor/scratchpad.md` accordingly.
+- Revise the project scratchpad (`.cursor/scratchpad.md`) accordingly.
 - Create beads with `bd create` including `--description` and `--acceptance` (see beads-quality rule for requirements). Wire dependencies with `bd dep add`. For multi-issue breakdowns, use `bd create --graph plan.json` to batch-create an entire dependency graph from JSON.
 - Use `bd graph <epic-id>` to visualize dependency order and identify parallelism opportunities before starting execution. Use `bd graph --all --compact` for a full project view.
 - For breakdowns with 3+ beads or high-risk areas (auth, billing, data loss), create a design doc (see design-docs rule).
@@ -46,7 +46,7 @@ For trivial operational tasks (creating files, running diagnostics, checking bea
 - **Beads (`bd`) is the single source of truth for task state.** Do not track tasks with markdown checkboxes.
 - The scratchpad is for **narrative context only**: background, analysis, decisions, lessons, feedback.
 - On new projects, check for `.beads/`. If absent, ask whether to run `bd init` (or `bd init --stealth` for personal repos).
-- Run `bd setup cursor` once per project for per-project beads rules.
+- Run `bd setup <tool>` once per project (e.g. `bd setup cursor` or `bd setup claude`) for per-project beads rules.
 - Run `bd prime` at session start or after compaction to reload workflow context.
 
 ## Scratchpad Conventions
