@@ -1,10 +1,12 @@
 # AI Dev Community — Getting Started
 
-## What is this?
+## You shouldn't need to have been in the room
 
-A shared methodology for AI-assisted development at Pryon. Rules, scripts, and automation that make coding agents (Cursor, Claude Code, etc.) produce better work — fewer hallucinations, better test discipline, clearer acceptance criteria, evidence-based completion.
+This playbook exists so you don't have to piece together tribal knowledge from Slack threads, hallway conversations, or reverse-engineering someone else's setup. You clone a repo, run one command, and your agent knows how to plan, test, verify, and close work — the same way everyone else's does.
 
-This isn't about which model to use. It's about **how agents work**: plan before coding, test before implementing, verify before closing.
+It isn't about which model is smartest. It's about what happens *between* the model and the code: how work gets decomposed, how quality gets enforced, how context survives across sessions.
+
+The core idea: **if you can describe what you want clearly, an agent can build it.** The playbook gives your agent the structure to do that reliably — and gives you the confidence that what it built is actually right.
 
 ## The three resources
 
@@ -14,7 +16,7 @@ This isn't about which model to use. It's about **how agents work**: plan before
 | **Jira board** | [PC — Pryon Community](https://pryoninc.atlassian.net/jira/software/projects/PC/boards/1794) | Work items for the playbook itself |
 | **Confluence space** | [ADC — AI Dev Community](https://pryoninc.atlassian.net/wiki/spaces/ADC/overview) | Docs, discussions, decisions — you're here |
 
-## What's in the repo today
+## What's in the repo
 
 **Eight agent rules** covering the full development workflow, available for both Cursor (`.mdc` format) and Claude Code (`.md` format):
 
@@ -30,9 +32,9 @@ This isn't about which model to use. It's about **how agents work**: plan before
 | **Agent identity** | Describe complexity and risk — never estimate human timelines |
 
 **Automation:**
-- `sync-rules.sh` — distributes rules to all your project repos in one command (both Cursor and Claude Code formats)
-- `playbook-init.sh` — one-command project setup (replaces the multi-step manual process)
-- `playbook-doctor.sh` — validates your setup and reports fix commands
+- `playbook-init.sh` — one-command project setup (rules, beads, scratchpad, sync registration)
+- `playbook-doctor.sh` — validates your setup and prints fix commands
+- `sync-rules.sh` — distributes rules to all your project repos (Cursor, Claude Code, or both)
 - `setup-worktree.sh` — shared beads DB across git worktrees
 
 ## How to get started
@@ -55,7 +57,16 @@ Run: bash ~/ai-dev-playbook/scripts/playbook-init.sh --tool cursor
 Then run: bash ~/ai-dev-playbook/scripts/playbook-doctor.sh
 ```
 
-**Verify:** `bash ~/ai-dev-playbook/scripts/playbook-doctor.sh` — checks everything is configured correctly.
+**Option 3: Try it on a sandbox first** (if you want to see what it does before committing)
+
+```bash
+cd ~/ai-dev-playbook/sandbox/project
+bash ~/ai-dev-playbook/scripts/playbook-init.sh --tool cursor --stealth
+```
+
+Open `sandbox/project/` in your editor, follow the [Walkthrough](../sandbox/WALKTHROUGH.md). 45 minutes, no prior knowledge needed.
+
+**Verify anytime:** `bash ~/ai-dev-playbook/scripts/playbook-doctor.sh`
 
 ## Philosophy (3 sentences)
 
@@ -68,8 +79,10 @@ Then run: bash ~/ai-dev-playbook/scripts/playbook-doctor.sh
 ## Learn more
 
 - **[Core Concepts](concepts.md)** — Why the playbook exists and how the four components work together
-- **[Glossary](glossary.md)** — Plain-English definitions of all terminology
+- **[FAQ](faq.md)** — Common questions from people adopting the playbook
 - **[Quick Start](../QUICKSTART.md)** — Detailed setup for Cursor and Claude Code users
+- **[Onboarding Sandbox](../sandbox/)** — Hands-on 45-minute exercise teaching the full workflow by doing
+- **[Glossary](glossary.md)** — Plain-English definitions of all terminology
 
 ## Questions?
 

@@ -158,6 +158,7 @@ Reports pass/fail/warn for every check and prints fix commands for anything that
 
 ## What's next
 
+- **[FAQ](docs/faq.md)** — Common questions from real adopters (Cursor vs Claude, multiple agents, migration)
 - **[Onboarding Sandbox](sandbox/)** — 45-minute hands-on exercise teaching the full workflow by doing
 - **[Core Concepts](docs/concepts.md)** — Why the playbook exists and how the pieces fit together
 - **[Glossary](docs/glossary.md)** — Definitions for all terminology

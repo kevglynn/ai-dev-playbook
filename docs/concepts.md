@@ -87,6 +87,7 @@ Phases are earned by evidence, not by calendar. Each phase has measurable criter
 
 ## What to read next
 
+- **[FAQ](faq.md)** — Common questions from real adopters (Cursor vs Claude, multiple agents, migration)
 - **[Quick Start](../QUICKSTART.md)** — Set up the playbook in your project (< 5 minutes)
 - **[Onboarding Sandbox](../sandbox/)** — Learn the full workflow hands-on in 45 minutes
 - **[Glossary](glossary.md)** — Definitions for all terminology
