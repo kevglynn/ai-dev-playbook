@@ -19,6 +19,7 @@ Claude Code-compatible `.md` files — same content as Cursor rules with YAML fr
 | `worktree-awareness.mdc` | Git worktree isolation: commit-early discipline, shared beads DB via redirect, no false fabrication claims |
 | `multi-agent-review.mdc` | Two-tier review protocol: same-model multi-lens (autonomous) + cross-model (human-assisted), pattern-level `bd remember` capture |
 | `operating-model.mdc` | Planner/Executor roles, mode switching, scratchpad conventions, beads task tracking, workflow |
+| `agent-identity.mdc` | No human-baseline estimation — describe complexity, scope, and risk instead of timelines |
 
 ### `cursor/settings-ui/`
 Optional user-level Cursor Settings UI rule for personal conventions (e.g., "always ask before using -force git"). The operating model (Planner/Executor roles, workflow, scratchpad) now lives in `operating-model.mdc` and syncs automatically with all other rules.
@@ -31,8 +32,10 @@ Optional user-level Cursor Settings UI rule for personal conventions (e.g., "alw
 
 | Script | What it does |
 |--------|-------------|
-| `sync-rules.sh` | Multi-format rule sync. `--format cursor` (default) copies `.mdc` files; `--format claude` strips frontmatter and emits `.md` files. Supports `--check` for drift and `--local` for in-repo generation. |
-| `sync-cursor-rules.sh` | Legacy Cursor-only sync (still works, but prefer `sync-rules.sh`). |
+| `playbook-init.sh` | One-command project setup. Copies rules, initializes beads, creates scratchpad, registers for sync. Supports `--tool cursor\|claude\|both` and `--stealth`. |
+| `playbook-doctor.sh` | Validates playbook setup. Checks rules, beads, scratchpad, sync targets, worktrees. CI-friendly exit code with fix commands. |
+| `sync-rules.sh` | Multi-format rule sync. `--format cursor\|claude\|all`. Supports `--check` (drift detection), `--local` (in-repo generation), `--dry-run` (preview). Validates targets, cleans stale files, survives per-target errors. |
+| `sync-cursor-rules.sh` | **Deprecated** — prints migration instructions, then syncs. Use `sync-rules.sh` instead. |
 | `setup-worktree.sh` | Creates `.beads/redirect` so worktrees share the main repo's beads database. Runs automatically via IDE hooks or manually. |
 
 ### `infra/`
@@ -51,7 +54,16 @@ Bootstrap scripts, templates, and runbooks for **EC2 / cloud agent machines**. R
 
 ## Setup
 
-### First time
+### Quick start (recommended)
+```bash
+git clone https://github.com/kevglynn/ai-dev-playbook ~/ai-dev-playbook
+cd /path/to/your/project
+bash ~/ai-dev-playbook/scripts/playbook-init.sh
+```
+
+See **[QUICKSTART.md](QUICKSTART.md)** for all setup options and **[docs/concepts.md](docs/concepts.md)** for how the pieces fit together.
+
+### Manual setup
 1. Clone this repo
 2. Add your project repo roots to `~/.playbook-sync-targets` (one path per line)
 3. Run `./scripts/sync-rules.sh` to distribute Cursor rules
@@ -118,6 +130,31 @@ If the worktree already has a local beads database from a previous `bd init`, th
 ### Portability
 
 The setup script is pure shell (no `python3` or `bd` binary required). Validated on bd 0.61.0 (Homebrew) and macOS/Linux. On Windows, use WSL or Git Bash.
+
+## Documentation
+
+| Document | Audience |
+|----------|---------|
+| [QUICKSTART.md](QUICKSTART.md) | First-time setup in under 5 minutes |
+| [docs/concepts.md](docs/concepts.md) | Why the playbook exists and how the four components work together |
+| [sandbox/](sandbox/) | Hands-on 45-min exercise teaching the full workflow by doing |
+| [docs/glossary.md](docs/glossary.md) | Plain-English definitions of all terminology |
+| [docs/README.md](docs/README.md) | Full reading order — decks, guides, and reference material |
+| [docs/executive-summary.md](docs/executive-summary.md) | One-page org operating model summary (CTO level) |
+| [docs/rule-effectiveness-scorecard.md](docs/rule-effectiveness-scorecard.md) | Measuring whether rules change agent behavior |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | How to propose and contribute changes |
+| [CHANGELOG.md](CHANGELOG.md) | What changed and when |
+
+## Versioning
+
+The playbook uses semantic versioning. Teams can pin to a stable release:
+
+```bash
+./scripts/sync-rules.sh --version v1.0.0              # Sync from a specific release
+./scripts/sync-rules.sh --show-version                 # Print current version
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for release process details.
 
 ## Origin
 

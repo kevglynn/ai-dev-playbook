@@ -45,6 +45,14 @@ After the self-review step, the agent performs **three independent review passes
 | `architect-reviewer` | Pattern consistency, component boundaries, reusability | Architectural drift, duplication, wrong abstractions |
 | `simplify` | Over-engineering, unnecessary complexity, premature abstraction | Gold-plating, dead code, abstractions without consumers |
 
+### How to launch review passes
+
+Each pass must run with independent context — reviewing the same files but not seeing the other passes' findings until triage.
+
+- **Cursor:** Spawn three subagents via the Task tool, one per lens (`code-reviewer`, `architect-reviewer`, `simplify`). Each subagent gets the bead context and file contents listed below. Launch all three in parallel in a single message.
+- **Claude Code:** Run three separate tool invocations or subprocess calls. Each starts with only the bead context and file contents — no prior pass results.
+- **Fallback (no parallelism):** Run three sequential passes. Write findings from each pass to a file or bead note before starting the next to prevent anchoring on your own prior findings.
+
 ### Context for each review pass
 
 Each review pass must include:

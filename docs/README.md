@@ -8,21 +8,25 @@ If you're new to this, go in this order:
 
 | # | Document | What it is | Time |
 |---|----------|-----------|------|
-| 1 | [From Chat to System](ai-dev-game-presentation.html) | The origin story. Why structured AI development matters, what tools exist (Beads, Stringer, Agent Rules, Jira Sync), and how they work together at individual scale. Start here if you've never seen any of this. | ~10 min |
-| 2 | [Stringer Workflow](stringer-workflow-deck.html) | Concrete demo of Stringer scanning two real repos (igloo-connector, jtbot-core). Shows the full pipeline: scan → triage → beads → Jira. Includes an appendix with real signal breakdowns. | ~8 min |
-| 3 | [Solutions Tech Pod Framework](solutions-tech-pod-agentic-dev-framework.html) | How Solutions is adopting this. Crawl/Walk/Run maturity model, work modes, risk classification, phase gates. The team-level adoption playbook. | ~8 min |
-| 4 | [Org Operating Model](org-agentic-dev-operating-model.html) | The full org-scale framework. 6 design decisions (decomposition, assignment, coherence, testing, review, tracking), the end-to-end pipeline, pilot plan, and rollout phases. This is the CTO-level deck. | ~15 min |
-| 5 | [Executive Summary](executive-summary.md) | One-page written summary of the org operating model. Same content as deck #4 but in prose — good for async review or pasting into a doc. | ~5 min |
-| 6 | [EC2 agent setup](../infra/runbooks/ec2-agent-setup.md) | Bootstrap agent tooling on EC2: Git SSH keys, IAM, `install-agent-tools.sh`, verify `bd`/Cursor, Instance Connect. | ~15 min |
-| 7 | [VPC assessment](../infra/runbooks/vpc-assessment.md) | Map VPCs/subnets/routing/instances from inside an EC2; document in `aws-infra.mdc`. | ~20 min |
-| 8 | [Infra common fixes](../infra/runbooks/common-fixes.md) | Gotchas: Anaconda vs yum, ed25519, ICU/beads, `BEADS_DIR`, Jupyter `@reboot`, Instance Connect timing. | ~5 min |
+| 1 | **[Core Concepts](concepts.md)** | Why the playbook exists and how beads, rules, Planner/Executor, and the scratchpad work together. Read this first if you want the "aha moment" before setup. | ~5 min |
+| 2 | **[Quick Start](../QUICKSTART.md)** | Set up the playbook in your project (one command or manual steps). | ~5 min |
+| 3 | [From Chat to System](ai-dev-game-presentation.html) | The origin story. Why structured AI development matters, what tools exist (Beads, Stringer, Agent Rules, Jira Sync), and how they work together at individual scale. | ~10 min |
+| 4 | [Stringer Workflow](stringer-workflow-deck.html) | Concrete demo of Stringer scanning two real repos (igloo-connector, jtbot-core). Shows the full pipeline: scan → triage → beads → Jira. | ~8 min |
+| 5 | [Solutions Tech Pod Framework](solutions-tech-pod-agentic-dev-framework.html) | How Solutions is adopting this. Crawl/Walk/Run maturity model, work modes, risk classification, phase gates. | ~8 min |
+| 6 | [Org Operating Model](org-agentic-dev-operating-model.html) | The full org-scale framework. 6 design decisions, the end-to-end pipeline, pilot plan, and rollout phases. CTO-level deck. | ~15 min |
+| 7 | [Executive Summary](executive-summary.md) | One-page written summary of the org operating model. Same content as deck #6 in prose — good for async review. | ~5 min |
+| 8 | [EC2 agent setup](../infra/runbooks/ec2-agent-setup.md) | Bootstrap agent tooling on EC2: Git SSH keys, IAM, `install-agent-tools.sh`, verify `bd`/Cursor, Instance Connect. | ~15 min |
+| 9 | [VPC assessment](../infra/runbooks/vpc-assessment.md) | Map VPCs/subnets/routing/instances from inside an EC2; document in `aws-infra.mdc`. | ~20 min |
+| 10 | [Infra common fixes](../infra/runbooks/common-fixes.md) | Gotchas: Anaconda vs yum, ed25519, ICU/beads, `BEADS_DIR`, Jupyter `@reboot`, Instance Connect timing. | ~5 min |
 
 ## Reference
 
 | Document | What it is |
 |----------|-----------|
+| [Core Concepts](concepts.md) | The four components (beads, rules, Planner/Executor, scratchpad) and how they work together. |
 | [Glossary](glossary.md) | Plain-English definitions of all terminology: beads, ACs, stringer, lottery risk, hotspots, orchestration, etc. |
-| [Confluence Orientation Draft](confluence-orientation-draft.md) | Draft of the ADC Confluence space orientation page. Covers setup steps, philosophy, and links to all three community resources (repo, Jira board, Confluence). |
+| [Rule Effectiveness Scorecard](rule-effectiveness-scorecard.md) | Measuring whether rule changes improve agent behavior. Session scorecard, baseline protocol, experiment template. |
+| [Confluence Orientation Draft](confluence-orientation-draft.md) | Draft of the ADC Confluence space orientation page. Covers setup steps, philosophy, and links to all three community resources. |
 | [EC2 agent setup](../infra/runbooks/ec2-agent-setup.md) | End-to-end bootstrap for agent EC2s (scripts under `infra/bootstrap/`). |
 | [VPC assessment](../infra/runbooks/vpc-assessment.md) | CLI-oriented methodology for VPC discovery and documentation. |
 | [Infra common fixes](../infra/runbooks/common-fixes.md) | Troubleshooting notebook for AL2023 + beads + SSH. |

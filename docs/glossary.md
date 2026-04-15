@@ -1,6 +1,6 @@
 # Glossary — AI-Native Engineering Operating Model
 
-Quick reference for terminology used in the operating model deck and process docs. Designed for anyone encountering these concepts for the first time.
+Quick reference for terminology used in the operating model deck and process docs. Designed for anyone encountering these concepts for the first time. For how these pieces fit together, see **[Core Concepts](concepts.md)**.
 
 | Term | What it means |
 |------|---------------|

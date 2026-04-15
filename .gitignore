@@ -6,3 +6,4 @@
 # Cursor workspace files (track only committed config)
 .cursor/*
 !.cursor/worktrees.json
+!.cursor/agents/

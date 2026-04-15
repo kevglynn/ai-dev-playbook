@@ -31,7 +31,7 @@ All worktrees share a single beads database via a redirect file (`.beads/redirec
 - A bead created in any worktree is visible to all others
 - There is one Dolt server instance, not one per worktree
 
-**How it works:** IDE-created worktrees (e.g. via Cursor's `postCreate` hook in `.cursor/worktrees.json`) run `scripts/setup-worktree.sh` to create the redirect automatically. No manual setup needed.
+**How it works:** IDE-created worktrees (e.g. via a `postCreate` hook in `.cursor/worktrees.json` or equivalent IDE config) run `scripts/setup-worktree.sh` to create the redirect automatically. For CLI-based worktrees, use `bd worktree create` which handles the redirect natively.
 
 **If `bd list` fails in a worktree:** Run `bd doctor --agent` for diagnostics with remediation commands. Alternatively, run `bash scripts/setup-worktree.sh` manually from the worktree root.
 

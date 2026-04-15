@@ -1,15 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Sync workflow .mdc rules from ai-dev-playbook (canonical source) to target
-# repos AND their git worktrees.
+# DEPRECATED: Use sync-rules.sh instead (supports --format cursor|claude|all).
 #
-# Usage:
-#   ./scripts/sync-cursor-rules.sh          # Copy rules to all targets
-#   ./scripts/sync-cursor-rules.sh --check  # Report drift without copying
+# This script still works but will be removed in a future release.
+# Migration:
+#   1. Rename ~/.cursor-sync-targets → ~/.playbook-sync-targets
+#   2. Change paths from .cursor/rules → repo roots (one per line)
+#   3. Use: ./scripts/sync-rules.sh [--format cursor] [--check]
 #
-# Targets are read from ~/.cursor-sync-targets (one .cursor/rules path per line).
-# Rules are auto-discovered from cursor/rules/*.mdc (no hardcoded file list).
+# Original: Sync workflow .mdc rules from ai-dev-playbook to target repos.
+
+echo "⚠  sync-cursor-rules.sh is deprecated. Use sync-rules.sh instead." >&2
+echo "   See: scripts/sync-rules.sh --help" >&2
+echo "" >&2
 
 SRC="$(cd "$(dirname "$0")/.." && pwd)/cursor/rules"
 CONFIG_FILE="$HOME/.cursor-sync-targets"
@@ -38,7 +42,7 @@ fi
 TARGETS=()
 while IFS= read -r line; do
   TARGETS+=("$line")
-done < <(grep -v '^\s*#' "$CONFIG_FILE" | grep -v '^\s*$')
+done < <(grep -v '^\s*#' "$CONFIG_FILE" | grep -v '^\s*$' | tr -d '\r')
 
 if [ ${#TARGETS[@]} -eq 0 ]; then
   echo "No targets in $CONFIG_FILE. Add .cursor/rules paths, one per line."
