@@ -7,3 +7,14 @@
 .cursor/*
 !.cursor/worktrees.json
 !.cursor/agents/
+
+# macOS
+.DS_Store
+
+# IDE / tooling
+.sfdx/
+
+# Local scripts and artifacts
+dev-server.sh
+run.sh
+docs.zip
