@@ -6,7 +6,7 @@ Setup takes under 5 minutes. Choose your path below.
 
 1. **Clone the playbook** (skip if already cloned):
    ```bash
-   git clone https://github.com/kevglynn/ai-dev-playbook ~/ai-dev-playbook
+   git clone https://bitbucket.org/pryoninc/ai-dev-playbook ~/ai-dev-playbook
    ```
 
 2. **Install beads** (skip if `bd` is already on PATH):

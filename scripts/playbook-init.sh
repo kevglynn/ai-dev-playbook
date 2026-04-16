@@ -68,7 +68,7 @@ fi
 
 if [ ! -d "$PLAYBOOK_ROOT/cursor/rules" ]; then
   echo "✗ Playbook repo not found at $PLAYBOOK_ROOT"
-  echo "  Fix: git clone https://github.com/kevglynn/ai-dev-playbook ~/ai-dev-playbook"
+  echo "  Fix: git clone https://bitbucket.org/pryoninc/ai-dev-playbook ~/ai-dev-playbook"
   errors=$((errors + 1))
 else
   echo "✓ Playbook repo at $PLAYBOOK_ROOT"

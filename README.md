@@ -38,25 +38,15 @@ Optional user-level Cursor Settings UI rule for personal conventions (e.g., "alw
 | `sync-cursor-rules.sh` | **Deprecated** — prints migration instructions, then syncs. Use `sync-rules.sh` instead. |
 | `setup-worktree.sh` | Creates `.beads/redirect` so worktrees share the main repo's beads database. Runs automatically via IDE hooks or manually. |
 
-### `infra/`
+### `examples/`
 
-Bootstrap scripts, templates, and runbooks for **EC2 / cloud agent machines**. Reusable methodology lives here; **instance-specific** IPs, account IDs, and live scratchpads stay on the machine (filled templates + `--context-dir`), not committed to this repo.
-
-| Path | What it is |
-|------|------------|
-| `infra/bootstrap/install-agent-tools.sh` | Installs Go, Dolt, beads (`bd`), git/beads init, Cursor integration; optional `--context-dir` for `aws-infra.mdc` + `scratchpad.md` |
-| `infra/bootstrap/deploy-to-instance.sh` | Pushes bootstrap to another EC2 via EC2 Instance Connect; supports `--region`, `--user`, `--context-dir` |
-| `infra/templates/aws-infra.mdc.template` | Skeleton Cursor rule for VPC/instance context (placeholders) |
-| `infra/templates/scratchpad-template.md` | Standard scratchpad sections for agents |
-| `infra/runbooks/ec2-agent-setup.md` | SSH keys, IAM, bootstrap, verify, cross-instance access |
-| `infra/runbooks/vpc-assessment.md` | How to map a VPC from an EC2 with the AWS CLI |
-| `infra/runbooks/common-fixes.md` | Anaconda/yum, ssh-rsa, ICU/beads, `BEADS_DIR`, crontab, Instance Connect |
+Real-world analysis artifacts demonstrating the Stringer scan-to-beads pipeline on Pryon repos.
 
 ## Setup
 
 ### Quick start (recommended)
 ```bash
-git clone https://github.com/kevglynn/ai-dev-playbook ~/ai-dev-playbook
+git clone https://bitbucket.org/pryoninc/ai-dev-playbook ~/ai-dev-playbook
 cd /path/to/your/project
 bash ~/ai-dev-playbook/scripts/playbook-init.sh
 ```

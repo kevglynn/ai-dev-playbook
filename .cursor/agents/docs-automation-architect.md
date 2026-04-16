@@ -21,24 +21,13 @@ This repo is the **single distributable package for AI-native development**. Its
 - **`docs/stringer-workflow-deck.html`** — HTML slide deck
 - **`docs/solutions-tech-pod-agentic-dev-framework.html`** — HTML slide deck
 - **`docs/org-agentic-dev-operating-model.html`** — HTML slide deck
-- **`infra/runbooks/ec2-agent-setup.md`** — SSH keys, IAM, bootstrap
-- **`infra/runbooks/vpc-assessment.md`** — VPC mapping from EC2
-- **`infra/runbooks/common-fixes.md`** — known issues and fixes
-- **`stringer-analyses/`** — 8 markdown analysis/report files
+- **`examples/`** — Stringer analysis artifacts on real Pryon repos
 
 ### Scripts and Automation (current state)
 - **`scripts/sync-rules.sh`** — multi-format rule sync with `--check`, `--local`, `--format`
 - **`scripts/sync-cursor-rules.sh`** — legacy Cursor-only sync
 - **`scripts/setup-worktree.sh`** — beads redirect for worktrees
-- **`infra/bootstrap/install-agent-tools.sh`** — EC2 agent machine bootstrap
-- **`infra/bootstrap/deploy-to-instance.sh`** — push bootstrap to EC2
-- **`infra/templates/scratchpad-template.md`** — standard scratchpad sections
-- **`infra/templates/aws-infra.mdc.template`** — skeleton rule for VPC context
 - **`.cursor/worktrees.json`** — postCreate hook for worktree setup
-
-### Templates
-- **`infra/templates/scratchpad-template.md`** — scratchpad section template
-- **`infra/templates/aws-infra.mdc.template`** — VPC/instance context template
 
 ### What's Missing or Open (from PLAN.md)
 - Onboarding guide (`ai-dev-playbook-0gi`) — P1, open
@@ -50,9 +39,9 @@ This repo is the **single distributable package for AI-native development**. Its
 ## When Invoked
 
 1. **Read `README.md`**, **`QUICKSTART.md`**, and **`docs/README.md`** for current docs state
-2. **Read all scripts** in `scripts/` and `infra/bootstrap/`
+2. **Read all scripts** in `scripts/`
 3. **Read `PLAN.md`** for the docs/automation backlog
-4. **Explore `docs/`** and **`infra/`** for the full documentation landscape
+4. **Explore `docs/`** for the full documentation landscape
 
 Then produce analysis across these dimensions:
 
@@ -74,7 +63,7 @@ Then produce analysis across these dimensions:
 Propose specific new documentation, scripts, or automation:
 - **Onboarding guide**: What should it contain beyond QUICKSTART.md?
 - **Contribution guide**: How should team members propose rule changes?
-- **Troubleshooting guide**: Common issues and solutions (beyond infra/runbooks)
+- **Troubleshooting guide**: Common issues and solutions
 - **Health check script**: Automated validation that a project's playbook setup is correct
 - **Changelog automation**: Track rule changes across versions
 - **Rule diffing**: Show what changed between syncs

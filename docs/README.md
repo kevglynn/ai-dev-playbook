@@ -16,9 +16,13 @@ If you're new to this, go in this order:
 | 6 | [Solutions Tech Pod Framework](solutions-tech-pod-agentic-dev-framework.html) | How Solutions is adopting this. Crawl/Walk/Run maturity model, work modes, risk classification, phase gates. | ~8 min |
 | 7 | [Org Operating Model](org-agentic-dev-operating-model.html) | The full org-scale framework. 6 design decisions, the end-to-end pipeline, pilot plan, and rollout phases. CTO-level deck. | ~15 min |
 | 8 | [Executive Summary](executive-summary.md) | One-page written summary of the org operating model. Same content as deck #6 in prose — good for async review. | ~5 min |
-| 9 | [EC2 agent setup](../infra/runbooks/ec2-agent-setup.md) | Bootstrap agent tooling on EC2: Git SSH keys, IAM, `install-agent-tools.sh`, verify `bd`/Cursor, Instance Connect. | ~15 min |
-| 10 | [VPC assessment](../infra/runbooks/vpc-assessment.md) | Map VPCs/subnets/routing/instances from inside an EC2; document in `aws-infra.mdc`. | ~20 min |
-| 11 | [Infra common fixes](../infra/runbooks/common-fixes.md) | Gotchas: Anaconda vs yum, ed25519, ICU/beads, `BEADS_DIR`, Jupyter `@reboot`, Instance Connect timing. | ~5 min |
+
+## Ecosystem
+
+| Document | What it is | Time |
+|----------|-----------|------|
+| [Ecosystem Integration](ecosystem-integration.md) | How the playbook fits with `agentic-coding` and `claude-shared`. What each repo does, which to use when, and how the rules reach you. | ~5 min |
+| [Integration FAQ](integration-faq.md) | Questions about overlap, beads as a requirement, token cost, keeping rules current, and how everything works together. | ~5 min |
 
 ## Reference
 
@@ -29,11 +33,6 @@ If you're new to this, go in this order:
 | [Glossary](glossary.md) | Plain-English definitions of all terminology: beads, ACs, stringer, lottery risk, hotspots, orchestration, etc. |
 | [Rule Effectiveness Scorecard](rule-effectiveness-scorecard.md) | Measuring whether rule changes improve agent behavior. Session scorecard, baseline protocol, experiment template. |
 | [Confluence Orientation Draft](confluence-orientation-draft.md) | Draft of the ADC Confluence space orientation page. Covers setup steps, philosophy, and links to all three community resources. |
-| [EC2 agent setup](../infra/runbooks/ec2-agent-setup.md) | End-to-end bootstrap for agent EC2s (scripts under `infra/bootstrap/`). |
-| [VPC assessment](../infra/runbooks/vpc-assessment.md) | CLI-oriented methodology for VPC discovery and documentation. |
-| [Infra common fixes](../infra/runbooks/common-fixes.md) | Troubleshooting notebook for AL2023 + beads + SSH. |
-| [aws-infra template](../infra/templates/aws-infra.mdc.template) | Fill-in-the-blanks Cursor rule for cloud context (copy locally, do not commit secrets). |
-| [Scratchpad template](../infra/templates/scratchpad-template.md) | Section structure for `.cursor/scratchpad.md` on instances. |
 
 ## Key concepts (30-second version)
 

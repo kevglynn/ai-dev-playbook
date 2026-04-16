@@ -14,8 +14,7 @@ This repo is the **single distributable package for AI-native development** at a
 - **`scripts/sync-rules.sh`** — multi-format sync to target repos + worktrees
 - **`scripts/sync-cursor-rules.sh`** — legacy Cursor-only sync
 - **`scripts/setup-worktree.sh`** — beads redirect for shared DB in worktrees
-- **`docs/`** — executive summary, glossary, decks, runbooks
-- **`infra/`** — EC2 bootstrap, templates, runbooks
+- **`docs/`** — executive summary, glossary, decks
 - **`PLAN.md`** — workstreams, decisions log, prioritized backlog
 - **`QUICKSTART.md`** — copy-paste setup for Cursor and Claude Code
 

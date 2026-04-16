@@ -18,3 +18,7 @@
 dev-server.sh
 run.sh
 docs.zip
+
+# Removed from repo — kept locally
+infra/
+ip-mining-report.md

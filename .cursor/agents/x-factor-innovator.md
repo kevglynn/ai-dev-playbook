@@ -12,9 +12,8 @@ This repo is the **single distributable package for AI-native development** at a
 - **8 agent rules** (`cursor/rules/*.mdc`) teaching Planner/Executor workflow, beads task tracking, TDD, code review, worktree management, and design docs
 - **Multi-format sync** (`scripts/sync-rules.sh`) distributing rules to project repos for both Cursor and Claude Code
 - **Worktree + beads integration** (`scripts/setup-worktree.sh`) sharing a single beads DB across git worktrees
-- **EC2 agent infrastructure** (`infra/`) for cloud-based agent machines
 - **Documentation and decks** (`docs/`) for executive buy-in and team orientation
-- **Stringer analyses** (`stringer-analyses/`) — research/analysis artifacts
+- **Stringer analysis examples** (`examples/`) — real scan-to-beads pipeline demonstrations
 
 ### The Playbook's Core Value Proposition
 A new team member clones this repo, runs sync, and gets a working agentic dev environment with quality guardrails, task tracking, and worktree support — no tribal knowledge required.

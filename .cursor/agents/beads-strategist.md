@@ -14,7 +14,7 @@ This repo is the **single distributable package for AI-native development**. Bea
 - **`PLAN.md`** tracking workstreams with bead IDs
 - **`QUICKSTART.md`** for onboarding new users
 - **`docs/glossary.md`** defining beads terminology
-- **`infra/bootstrap/install-agent-tools.sh`** installing `bd` on cloud machines
+- **`examples/`** — Stringer analysis artifacts on real Pryon repos
 
 ### How Beads Appears in the Rules Today
 
