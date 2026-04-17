@@ -14,15 +14,23 @@ Kevin's segment follows Armando's slides on the paradigm shift, documentation-as
 
 ---
 
-## Handoff from Armando → You (1 min)
+## Handoff from Armando → You (2 min)
 
 Armando finishes with "now Kevin's going to show you what this looks like in practice."
 
-Pick up immediately in the terminal. No slides. No preamble.
+Pick up immediately. No slides. No preamble. But establish credibility before touching the terminal.
 
 **Say:**
 
-> "Armando showed you what's available and why it matters. I'm going to show you what it looks like when it's working. Two things make this go: 8 behavioral rules that tell the agent how to work, and a tool called beads that gives it structured task tracking across sessions. Those two pieces together are what turn a chatbot into an engineering partner. Let me show you."
+> "Quick context on where this comes from before I show you. I've been working on this for a few months now, and I've been treating it like a real engineering problem, not just vibes and blog posts."
+>
+> "There are 8 behavioral rules. Each one has been through multiple revision cycles. I don't just write a rule and hope it works — I have a 20-item scorecard that I run against actual agent sessions to measure whether the rule changed behavior. Hypothesis, baseline, post-change measurement, null result reporting when something doesn't land. If a rule isn't working, I rewrite it based on evidence, not intuition."
+>
+> "I also built a dedicated analysis agent that scores agent transcripts against the scorecard automatically — it does before/after comparisons anchored to specific changelog dates, so I can attribute behavior changes to specific rule edits. It reports null results honestly. A rule change with no effect is a finding, not a failure."
+>
+> "The rules have semantic versioning, a changelog with detailed entries for every change, a contribution process that requires measurement evidence, and five specialized subagents that audit different dimensions — rule quality, beads maturity, documentation gaps, rule effectiveness, and creative strategy."
+>
+> "So this isn't something I threw together over a weekend. It's a methodology that's been measured, revised, and hardened. Now let me show you what it looks like in practice."
 
 ---
 
