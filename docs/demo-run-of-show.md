@@ -6,11 +6,33 @@ Kevin's segment follows Armando's slides on the paradigm shift, documentation-as
 **Goal:** The audience watches an agent plan, execute with evidence, survive a session boundary, and architect a bigger feature — all governed by 8 rules and a purpose-built task tracker (beads) that travel with the project.
 
 **Setup before the meeting:**
-- Fresh sandbox: `cd ~/ai-dev-playbook/sandbox/project && git checkout -- . && rm -f tasks.json`
-- Remove any leftover beads/scratchpad: `rm -rf .beads .dolt .cursor/scratchpad.md .cursor/rules`
+- Fresh sandbox (run manually or use Cmd+K — see Act 0 below)
 - Terminal font size visible on screen share (16pt+)
-- Cursor open, no tabs, sidebar showing file explorer
-- Second terminal visible or Cmd+K ready
+- Cursor open to `~/ai-dev-playbook` for Acts 0-1 (reset + init)
+- **After init, open `~/ai-dev-playbook/sandbox/project` as a separate Cursor workspace** (File > Open Folder) for Acts 2-5. The agent must see sandbox/project as the workspace root so it reads the right rules and beads.
+- Terminal visible with Cmd+K ready
+
+---
+
+## Act 0: Cmd+K Reset — 1 min
+
+This is your opening move. Do it live on screen share. It demonstrates Cmd+K immediately and resets the sandbox at the same time.
+
+**Say:**
+
+> "Before we start — quick thing. I'm going to use Cmd+K in the terminal throughout this demo. It turns natural language into shell commands. Watch."
+
+**Cmd+K:** "go to the sandbox project directory and reset it — restore all files and remove tasks.json"
+
+**Expected:** `cd ~/ai-dev-playbook/sandbox/project && git checkout -- . && rm -f tasks.json`
+
+**Cmd+K:** "remove any leftover beads database, dolt, scratchpad, and cursor rules"
+
+**Expected:** `rm -rf .beads .dolt .cursor/scratchpad.md .cursor/rules`
+
+**Say:**
+
+> "Two plain English prompts, two clean commands. I didn't memorize anything. AI all the way down. That's the vibe for the next 30 minutes."
 
 ---
 
@@ -18,7 +40,7 @@ Kevin's segment follows Armando's slides on the paradigm shift, documentation-as
 
 Armando finishes with "now Kevin's going to show you what this looks like in practice."
 
-Pick up immediately. No slides. No preamble. But establish credibility before touching the terminal.
+Establish credibility before diving into the demo.
 
 **Say:**
 
@@ -30,50 +52,63 @@ Pick up immediately. No slides. No preamble. But establish credibility before to
 >
 > "The rules have semantic versioning, a changelog with detailed entries for every change, a contribution process that requires measurement evidence, and five specialized subagents that audit different dimensions — rule quality, beads maturity, documentation gaps, rule effectiveness, and creative strategy."
 >
-> "So this isn't something I threw together over a weekend. It's a methodology that's been measured, revised, and hardened. Now let me show you what it looks like in practice."
+> "So this isn't something I threw together over a weekend. It's a methodology that's been measured, revised, and hardened."
+
+> "Two quick notes before I dive in. First — I'm using Cursor today because the visual feedback makes it easier to demo. But everything you see works in Claude Code too. Same rules, same beads, same workflow. The only difference is form factor — Claude Code is terminal-based, Cursor is an IDE. If you only use one, start with whichever you're comfortable with."
+
+> "Second — I'm using a tool called beads for task tracking. I highly recommend you check it out. I credit it with a huge amount of the lift you're about to see — the structured planning, the evidence-based closure, the context that survives across sessions. The 8 rules reference beads throughout and they work significantly better with it. It's not technically mandatory, but honestly, without it you lose most of what makes this workflow different from just chatting with an AI."
+
+> "Okay. Let me show you."
 
 ---
 
 ## Act 1: Zero to One — 3 min
 
-**Do:** Run the init command in the terminal, visible on screen share.
+**Do:** Cmd+K: "run the playbook init with cursor and stealth mode"
 
-```bash
-cd ~/ai-dev-playbook/sandbox/project
-bash ~/ai-dev-playbook/scripts/playbook-init.sh --tool cursor --stealth
-```
+**Expected:** `bash ../../scripts/playbook-init.sh --tool cursor --stealth` (or the full path variant — either works)
 
 **While it runs, say:**
 
 > "One command. Three things just happened: it copied 8 behavioral rules into the project, initialized beads — that's the task tracker — and created a scratchpad for cross-session context. Same command works for Claude Code, just change the flag."
 
-**Do:** Open `sandbox/project/` in Cursor. Click into `.cursor/rules/` in the sidebar.
+**Do:** Cmd+K: "check what version of beads we have"
+
+**Expected:** `bd --version`
 
 **Say:**
 
-> "Eight rules. Each one is surgically focused — how to plan, how to test, how to close work with evidence, how to do design docs. The agent reads these automatically. I never reference them."
-
-**Do:** Click into `.beads/` or run `bd --version` in terminal.
-
-**Say:**
-
-> "And beads. This is the piece that makes structured work possible. It's a Dolt-powered issue tracker that lives in the repo — git-native, works offline, persists across sessions. The agent creates tasks, claims them, closes them with evidence. Without beads, the rules don't have anything to act on. These two things are a package deal."
+> "And there's beads — the task tracker I mentioned. Dolt-powered, git-native, works offline, persists across sessions. The agent creates tasks in here, claims them, closes them with evidence. This is what the rules are built on top of."
 
 **Sidebar comment (drop casually):**
 
 > "We're working on integrating these rules into Armando's repos so that Claude Code users will get them automatically through pryon-baseline, and Cursor users will get them through the agentic-coding CLI. That's coming."
 
-**Close the sidebar. Open a new agent chat.**
+### Switch workspace — critical step
+
+**Do:** Open `~/ai-dev-playbook/sandbox/project` as a **separate Cursor workspace** (File > Open Folder). The agent needs sandbox/project as its workspace root so it reads the right `.cursor/rules/` and `.beads/`. Share this new window on screen.
+
+**Say:**
+
+> "I'm opening the sandbox project as its own workspace now. This is how you'd work in a real project — the rules and beads live inside the project directory. The agent sees them automatically."
+
+**Do:** Click into `.cursor/rules/` in the sidebar.
+
+**Say:**
+
+> "Eight rules. Each one is surgically focused — how to plan, how to test, how to close work with evidence, how to do design docs. The agent reads these automatically. I never reference them."
 
 ---
 
 ## Act 2: Watch It Plan — 8 min
 
+**Do:** Open a new Cursor agent chat (Cmd+L or click the + icon). Make sure it's visible on screen share.
+
 **Say to the audience:**
 
 > "I have a trivial task tracker app. 76 lines of Python. I'm going to ask the agent to add a feature."
 
-**Paste into agent chat:**
+**Paste into the agent chat:**
 
 > Planner mode. I have a simple task tracker app (task_tracker.py). I want to add a priority field to tasks — high, medium, or low. Users should be able to set priority when adding a task and filter the task list by priority. Break this down.
 
@@ -91,7 +126,9 @@ When beads appear:
 When dependencies are wired:
 > "It wired dependencies between the beads. It knows the data model change has to land before the filtering feature can work. It's not going to try to do everything at once. This is what beads gives you — a real task graph, not a flat to-do list."
 
-**Do:** Cmd+K in terminal, type "show me all beads" — show the plan to the audience.
+**Do:** Cmd+K: "show me all the beads"
+
+**Expected:** `bd list` (or `bd list --all`)
 
 **Say:**
 
@@ -134,7 +171,9 @@ When it self-reviews against ACs:
 When it closes with evidence:
 > "There's the close — `bd close` with evidence mapped to each AC. This is a paper trail stored in beads. You could hand this project to another developer or another agent and they'd know exactly what was planned, what was built, and what evidence proves it works."
 
-**Do:** Cmd+K in terminal — "show me which beads are done and which are open"
+**Do:** Cmd+K: "show me which beads are done and which are still open"
+
+**Expected:** `bd list` or `bd list --by-status`
 
 **Say:**
 
@@ -167,13 +206,19 @@ When it closes with evidence:
 
 **Watch the agent clean up — commit code, update scratchpad, checkpoint.**
 
-**Then: close the chat entirely.** Make this visible. Click the X. It's gone.
+**Then: close the chat entirely.** Make this visible. Click the X. The chat is gone. Pause for a beat — let the audience register that the context is destroyed.
 
-**Open a brand new agent chat. Paste:**
+**Do:** Open a brand new Cursor agent chat (Cmd+L or click the + icon).
+
+**Paste:**
 
 > Pick up where we left off.
 
 **Wait. Let the audience watch the agent reconstruct context from the scratchpad and beads.**
+
+**Do:** Cmd+K: "what's in the scratchpad's current status section"
+
+**Expected:** Something like `cat .cursor/scratchpad.md` or `grep -A 20 "Current Status" .cursor/scratchpad.md`
 
 **Say:**
 
@@ -192,6 +237,10 @@ When it closes with evidence:
 > Planner mode. I want to add due dates to tasks, with overdue highlighting in the list output, and a daily summary. This is bigger — think it through first.
 
 **Watch the agent create a design doc — Problem, Alternatives, Risks — before decomposing.**
+
+**Do:** Cmd+K: "show me the design doc that was just created"
+
+**Expected:** Something like `cat docs/specs/*.md` or `ls docs/specs/`
 
 **Say:**
 
@@ -223,7 +272,7 @@ If the agent does something unexpected:
 - Don't hide it. Say "watch this — it's doing something I didn't plan." Then narrate what happened. Unscripted moments are more convincing than polished ones.
 
 If the agent doesn't follow the rules (starts coding without planning):
-- Check `.cursor/rules/` — rules may not have copied. Run `playbook-init.sh` again.
+- Check `.cursor/rules/` — rules may not have copied. Cmd+K: "run playbook init again with cursor and stealth"
 - If rules are there, say "this is exactly why we test — let me reload" and start a fresh chat.
 
 ---

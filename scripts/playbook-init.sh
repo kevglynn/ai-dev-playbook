@@ -123,25 +123,19 @@ if [ -d "$PROJECT_ROOT/.beads" ] || [ -d "$PROJECT_ROOT/.dolt" ]; then
   echo "✓ Beads already initialized (skipping bd init)"
 else
   if $STEALTH; then
-    bd init --stealth 2>/dev/null
+    echo N | bd init --stealth 2>/dev/null
     echo "✓ Beads initialized (stealth mode)"
   else
-    bd init 2>/dev/null
+    echo N | bd init 2>/dev/null
     echo "✓ Beads initialized"
   fi
 fi
 
 # ---------- Beads setup ----------
 
-if [[ "$TOOL" == "cursor" || "$TOOL" == "both" ]]; then
-  bd setup cursor 2>/dev/null || true
-  echo "✓ bd setup cursor"
-fi
-
-if [[ "$TOOL" == "claude" || "$TOOL" == "both" ]]; then
-  bd setup claude 2>/dev/null || true
-  echo "✓ bd setup claude"
-fi
+# Note: we skip 'bd setup cursor/claude' here because the playbook's 8 rules
+# already provide beads workflow guidance with more depth than bd's built-in
+# integration rule. Running bd setup would add a redundant beads.mdc.
 
 # ---------- Scratchpad ----------
 
