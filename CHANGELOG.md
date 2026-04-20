@@ -2,6 +2,14 @@
 
 All notable changes to the playbook rules and scripts. Format: date, affected files, what changed.
 
+## 2026-04-19
+
+### Rules
+- **operating-model.mdc**: Fixed broken `bd human <id>` command → `bd tag <id> human` (bd human is a subcommand group, not a direct-flag command; tagging adds the human label that `bd human list` queries). Clarified `bd update --claim` as atomic preferred form (sets assignee + in_progress in one operation). Replaced `Run bd setup <tool> once per project` with explicit guidance — skip for playbook-initialized projects, use only for standalone beads. Added "Machine-readable output" section (`--json`, `--flat` for scripting). Added "Quick capture" (`bd q`) and "Aliases" (`bd done`, `bd view`, `bd new`). All changes applied across .cursor/rules, cursor/rules, sandbox, and claude/rules copies.
+
+### Docs
+- **sandbox/WALKTHROUGH.md**: Added "Verify before continuing" gate after setup — tells users to run `bd list` and confirm `.beads/` is working before starting exercises. Prevents agents from falling back to unstructured mode if init failed.
+
 ## 2026-04-15
 
 ### Scripts

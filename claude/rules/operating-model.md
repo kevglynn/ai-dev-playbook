@@ -70,7 +70,7 @@ After creation: `bd graph <epic-id>` to visualize and verify dependency order be
 ### Executor
 
 - Execute specific tasks: writing code, running tests, handling implementation details. Report progress or raise questions after milestones or blockers.
-- Run `bd ready` to find the next unblocked task. Claim with `bd update <id> --claim`.
+- Run `bd ready` to find the next unblocked task. Claim with `bd update <id> --claim` (atomic: sets assignee + status to in_progress in one operation).
 - **JIT verify** before coding: confirm files and patterns in the bead still match reality (see bead-completion rule).
 - **Follow pragmatic-tdd rule** for test discipline by bead type.
 - **Self-review against ACs** before declaring done (see bead-completion rule).
@@ -78,7 +78,7 @@ After creation: `bd graph <epic-id>` to visualize and verify dependency order be
 - If an AC is wrong or obsolete, do NOT modify it — mark the bead blocked and escalate to the Planner.
 - If blocked by a dependency, use `bd update <id> --status=blocked`. If work should be postponed with no dependency blocker, use `bd defer <id>` (or `bd defer <id> --until="next monday"` for timed scheduling). Deferred beads reappear in `bd ready` when the date arrives.
 - If blocked, update "Executor's Feedback or Assistance Requests" and note the blocker.
-- If a decision requires human judgment, flag with `bd human <id>` rather than blocking the entire workflow. Check `bd human list` at session start for pending decisions.
+- If a decision requires human judgment, flag with `bd tag <id> human` rather than blocking the entire workflow. Check `bd human list` at session start for pending decisions.
 - Document session-relevant context in the scratchpad "Lessons" section. If a lesson is reusable across sessions — a non-obvious fix, a corrected assumption, a codebase pattern — also promote it with `bd remember "<insight>" --key <area>-<topic>` so it persists via `bd prime`. See `bead-completion.mdc` for the full protocol.
 
 ### When work can't proceed
@@ -88,7 +88,7 @@ After creation: `bd graph <epic-id>` to visualize and verify dependency order be
 | Another bead must complete first | Block on that dependency | `bd update <id> --status=blocked` + `bd dep add <id> <blocker-id>` |
 | External system is down or API unavailable | Block with a note | `bd update <id> --status=blocked` then `bd note <id> "Blocked: <system> unavailable"` |
 | Work is valid but not urgent right now | Defer (optionally with a date) | `bd defer <id>` or `bd defer <id> --until="next monday"` |
-| A design/product/business decision is needed | Flag for human and continue other work | `bd human <id>` then `bd ready` for the next task |
+| A design/product/business decision is needed | Flag for human and continue other work | `bd tag <id> human` then `bd ready` for the next task |
 | An acceptance criterion is wrong or impossible | Escalate to Planner — do NOT modify the AC | Mark blocked, note why, update scratchpad "Feedback" section |
 | 3+ approaches have failed | Stop implementing, escalate | `bd note <id> "Tried: ..."` then mark blocked |
 | Unsure which status is right | Default to blocked and note the ambiguity | Better to over-signal than to silently continue |
@@ -107,7 +107,7 @@ When the Executor encounters an unexpected failure:
 - **Beads (`bd`) is the single source of truth for task state.** Do not track tasks with markdown checkboxes.
 - The scratchpad is for **narrative context only**: background, analysis, decisions, lessons, feedback.
 - On new projects, check for `.beads/`. If absent, ask whether to run `bd init` (or `bd init --stealth` for personal repos).
-- Run `bd setup <tool>` once per project (e.g. `bd setup cursor` or `bd setup claude`) for per-project beads rules.
+- **Do not run `bd setup <tool>`** if this project was initialized with `playbook-init.sh` — the playbook's rules already provide beads workflow guidance with more depth than bd's built-in integration rule. Running `bd setup` would add a redundant `beads.mdc`. Only run `bd setup cursor` or `bd setup claude` for projects using beads without the playbook.
 - Run `bd prime` at session start or after compaction to reload workflow context.
 
 ## Scratchpad Conventions
@@ -156,6 +156,12 @@ Before ending work:
 - `bd query "status=open AND priority<=1 AND type=bug"` — structured query with AND/OR/NOT, parentheses, and date-relative expressions (e.g., `updated>7d`)
 - `bd blocked` — show all blocked issues
 - `bd count --by-status` — quick project metrics
+
+**Machine-readable output:** `bd list` defaults to `--tree` (human-readable). When scripting or piping output, use `bd list --json` for JSON or `bd list --flat` for legacy flat format. Same applies to `bd ready --json`, `bd show <id> --json`, `bd blocked --json`.
+
+**Quick capture:** `bd q "title"` creates a task and outputs only the ID — useful for scripting: `ISSUE=$(bd q "Fix login bug")`.
+
+**Aliases:** `bd done` = `bd close`, `bd view` = `bd show`, `bd new` = `bd create`.
 
 ## Project Hygiene
 

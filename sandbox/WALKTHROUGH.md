@@ -17,6 +17,8 @@ bash ~/ai-dev-playbook/scripts/playbook-init.sh --tool cursor --stealth
 
 (Use `--tool claude` if you're using Claude Code.)
 
+**Verify before continuing** — run `bd list` in the terminal. You should see `Total: 0 issues` (an empty but working database). If you get an error like "no beads database found," re-run the init script above. Do not proceed to the exercises without a working `.beads/` — the agent will fall back to unstructured mode and the walkthrough won't demonstrate the intended behavior.
+
 Open `~/ai-dev-playbook/sandbox/project/` in your editor. You're ready.
 
 ---

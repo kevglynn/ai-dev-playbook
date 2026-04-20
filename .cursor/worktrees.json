@@ -1,0 +1,5 @@
+{
+  "scripts": {
+    "postCreate": "bash scripts/setup-worktree.sh"
+  }
+}
