@@ -112,6 +112,29 @@ Agent skills are reusable capability packages. The playbook should curate a libr
 | `x-factor-innovator` | Generates novel ideas for playbook capabilities |
 | `rule-efficacy-analyst` | Measures correlation between rule changes and agent behavior shifts (feeds Tier 4.2) |
 
+### 8. Governance and thought leadership (new)
+
+The playbook now adopts the **Agentic Covenant** — an open source Code of Conduct for human-agent collaboration, created by the beads project. This positions Pryon's agentic development framework as a complete operating model (governance + discipline + onboarding + tooling), not just a set of rules.
+
+| Artifact | Status |
+|----------|--------|
+| `CODE_OF_CONDUCT.md` | Shipping — adopts Agentic Covenant v1.0 with Pryon customizations |
+| `docs/governance.md` | Shipping — connects governance to the playbook, positions thought leadership |
+| `docs/ecosystem-integration.md` | Updated — governance added as the top layer in the four-repo stack |
+| `docs/concepts.md` | Updated — governance is now the fifth component |
+| `docs/executive-summary.md` | Updated — "Governed" added as a design principle |
+| `CONTRIBUTING.md` | Updated — references the Agentic Covenant |
+
+**Cross-references with beads:** The Agentic Covenant is maintained upstream at [gastownhall/beads](https://github.com/gastownhall/beads/blob/main/CODE_OF_CONDUCT.md). The playbook adopts it rather than forking it, so governance evolves with the beads community. Key concepts flowing from beads to the playbook:
+
+- **Principal-agent accountability** (Agentic Covenant Part II)
+- **Agent operating standards** (Agentic Covenant Part III) — complement the playbook's behavioral rules
+- **Contributor protection / first-mover priority** (Agentic Covenant Part IV)
+- **Disclosure safe harbor** and `Assisted-by` convention (from the Linux kernel, via beads)
+- **ZFC (Zero Framework Cognition)** — keep smarts in models, keep orchestration dumb
+
+**Next:** Consider distributing `CODE_OF_CONDUCT.md` via `playbook-init.sh` alongside rules. Consider an Agentic Covenant adoption guide for Pryon project repos. Consider a blog post or internal presentation on governance as thought leadership.
+
 ### 7. Cross-tool rule support (`ai-dev-playbook-vwq`)
 
 The playbook is Cursor-first but the operating model is tool-agnostic. A 6-model comparative review (Codex, GPT, Opus, Sonnet, Composer, Gemini) converged on an architecture that extends the existing sync script rather than building a new pipeline. Key finding: a content audit of all 8 rules showed 4 of 8 are fully tool-agnostic, and only ~35 lines out of 629 total contain Cursor-specific references.

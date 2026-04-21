@@ -156,3 +156,13 @@ Before and after rule changes, use the [Rule Effectiveness Scorecard](docs/rule-
 - Experiment template for rigorous evaluation
 
 Rule changes without measurement evidence are still welcome — but if you can show before/after data, the change is much more convincing.
+
+## Code of Conduct
+
+This project is governed by [The Agentic Covenant](CODE_OF_CONDUCT.md) — the first Code of Conduct designed for communities where humans and AI agents collaborate. All contributors, whether working directly or through AI agents, are expected to uphold these standards.
+
+Key points for contributors:
+- AI-assisted contributions are explicitly welcome
+- Disclose substantial AI assistance using the `Assisted-by` convention
+- You are accountable for everything submitted under your account, including agent-generated content
+- See [docs/governance.md](docs/governance.md) for how governance fits into the playbook

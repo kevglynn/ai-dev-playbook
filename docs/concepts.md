@@ -13,7 +13,7 @@ AI coding assistants are powerful but unpredictable. Without structure, you get:
 
 The playbook solves these problems with four interlocking components.
 
-## The four components
+## The five components
 
 ### 1. Beads — structured task tracking for agents
 
@@ -60,6 +60,21 @@ A markdown file where the agent tracks context, decisions, progress, and lessons
 
 The scratchpad has six standard sections (Background, Challenges, Task Breakdown, Status, Feedback, Lessons) so every project's context follows the same structure.
 
+### 5. Governance — accountability for human-agent collaboration
+
+The four components above define **how agents work**. Governance defines **how the community of people building and using those rules should operate** — especially when AI agents are involved.
+
+The playbook adopts the **[Agentic Covenant](https://github.com/gastownhall/beads/blob/main/CODE_OF_CONDUCT.md)**, an open source Code of Conduct created by the beads project. Its core principles:
+
+- **Operator accountability**: the person directing an agent is responsible for everything that agent does
+- **Understanding over authorship**: the quality bar is comprehension and defensibility, not line-by-line writing
+- **Disclosure safe harbor**: transparency about AI involvement can never be used against a contributor
+- **Contributor protection**: if someone has an open PR, others must build on it — not rewrite it
+
+Governance is the layer that makes the other four components trustworthy at scale. Without it, a team of 50 developers running agents has no shared answer to "who is responsible when an agent breaks something?"
+
+See [docs/governance.md](governance.md) for the full governance guide.
+
 ## How they work together
 
 ```
@@ -71,7 +86,7 @@ New feature request
   → Next session: bd prime reloads context, bd ready finds the next task
 ```
 
-The agent doesn't need to remember anything — the beads hold the plan, the scratchpad holds the context, and the rules hold the standards. Context survives session boundaries, tool switches, and even developer handoffs.
+The agent doesn't need to remember anything — the beads hold the plan, the scratchpad holds the context, the rules hold the standards, and the governance holds accountability. Context survives session boundaries, tool switches, and even developer handoffs.
 
 ## The maturity model
 

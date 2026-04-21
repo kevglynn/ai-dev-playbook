@@ -133,6 +133,8 @@ The setup script is pure shell (no `python3` or `bd` binary required). Validated
 | [docs/executive-summary.md](docs/executive-summary.md) | One-page org operating model summary (CTO level) |
 | [docs/rule-effectiveness-scorecard.md](docs/rule-effectiveness-scorecard.md) | Measuring whether rules change agent behavior |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | How to propose and contribute changes |
+| [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | The Agentic Covenant — governance for human-agent collaboration |
+| [docs/governance.md](docs/governance.md) | How governance fits into the playbook and positions Pryon as a thought leader |
 | [CHANGELOG.md](CHANGELOG.md) | What changed and when |
 
 ## Versioning

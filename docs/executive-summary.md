@@ -40,6 +40,7 @@ Six phases from idea to production:
 - **Tool-agnostic.** Rules are markdown files in the repo. Beads are CLI-driven. Quality gates are CI-based. Works with Cursor, Claude Code, Copilot, or whatever comes next.
 - **Multi-repo native.** Agents work across repo boundaries in a single session. Beads live per-repo; Jira stories span repos.
 - **Evolving work units.** As agents handle more complexity, the natural size of a Jira ticket grows. The developer's role shifts from writing code to managing architecture and judgment calls.
+- **Governed.** The framework adopts the [Agentic Covenant](https://github.com/gastownhall/beads/blob/main/CODE_OF_CONDUCT.md) — the first Code of Conduct designed for human-agent collaboration. Operator accountability, disclosure standards, and contributor protection are built in, not bolted on. See [docs/governance.md](governance.md).
 
 ---
 

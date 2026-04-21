@@ -2,6 +2,20 @@
 
 All notable changes to the playbook rules and scripts. Format: date, affected files, what changed.
 
+## 2026-04-21
+
+### Governance
+- **CODE_OF_CONDUCT.md**: New — adopts The Agentic Covenant v1.0, the first Code of Conduct for human-agent collaboration (upstream: gastownhall/beads). Customized for Pryon internal context.
+- **docs/governance.md**: New — comprehensive guide connecting governance to the playbook. Positions the four-layer stack (governance + discipline + onboarding + tooling) as thought leadership. Explains Agentic Covenant principles, ZFC alignment, and adoption guide for project repos.
+
+### Docs
+- **docs/ecosystem-integration.md**: Added Agentic Covenant as the governance layer atop the three-repo ecosystem diagram. Updated "how they fit together" to include governance.
+- **docs/concepts.md**: Governance is now the fifth component (was four). Added section explaining operator accountability, understanding over authorship, and disclosure safe harbor.
+- **docs/executive-summary.md**: Added "Governed" as a fourth design principle, with link to governance docs.
+- **CONTRIBUTING.md**: Added Code of Conduct section referencing the Agentic Covenant.
+- **README.md**: Added CODE_OF_CONDUCT.md and docs/governance.md to documentation table.
+- **PLAN.md**: Added workstream 8 (Governance and thought leadership) documenting all new artifacts, cross-references with beads, and next steps.
+
 ## 2026-04-19
 
 ### Rules

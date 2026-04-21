@@ -26,8 +26,13 @@ Repository: [bitbucket.org/pryoninc/claude-shared](https://bitbucket.org/pryonin
 
 ```
 ┌─────────────────────────────────────────────────────────┐
+│  Agentic Covenant (community governance)                 │
+│  Accountability: who is responsible for agent behavior.  │
+│  Disclosure, contributor protection, enforcement.        │
+└─────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
 │  claude-shared                                          │
-│  Governance: what tools are allowed, safely.            │
+│  Tooling governance: what tools are allowed, safely.    │
 │  Plugin marketplace, security hooks, MCP configs.       │
 └─────────────────────────────────────────────────────────┘
 ┌─────────────────────────────────────────────────────────┐
@@ -44,9 +49,12 @@ Repository: [bitbucket.org/pryoninc/claude-shared](https://bitbucket.org/pryonin
 
 You don't need to choose between them. They're complementary layers:
 
+- **Agentic Covenant** defines who is accountable for agent behavior and how the community operates
 - **claude-shared** decides what your agent can access
 - **agentic-coding** gets your project set up and connects you to community knowledge
 - **ai-dev-playbook** shapes how your agent actually works once it's set up
+
+The **[Agentic Covenant](https://github.com/gastownhall/beads/blob/main/CODE_OF_CONDUCT.md)** is an open source Code of Conduct created by the beads project — the same tool powering the playbook's task tracking. It's the first governance framework designed for communities where humans and AI agents collaborate. See [docs/governance.md](governance.md) for how governance fits into the playbook.
 
 ## Which repo do I use?
 
