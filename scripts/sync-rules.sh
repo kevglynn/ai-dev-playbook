@@ -26,6 +26,7 @@ FORMAT="cursor"
 CHECK_MODE=false
 LOCAL_ONLY=false
 DRY_RUN=false
+SAFE_MODE=false
 PIN_VERSION=""
 USE_VERSIONED_SRC=false
 
@@ -35,6 +36,7 @@ while [[ $# -gt 0 ]]; do
     --check)   CHECK_MODE=true; shift ;;
     --local)   LOCAL_ONLY=true; shift ;;
     --dry-run) DRY_RUN=true; shift ;;
+    --safe)    SAFE_MODE=true; shift ;;
     --version) PIN_VERSION="$2"; shift 2 ;;
     --show-version)
       if [ -f "$PLAYBOOK_ROOT/VERSION" ]; then
@@ -55,6 +57,7 @@ Options:
   --check                      Report drift without syncing
   --local                      Generate in this repo only (claude/all)
   --dry-run                    Preview what would be written
+  --safe                       Back up locally modified files before overwriting
   --version TAG                Sync rules from a specific git tag (e.g. v1.0.0)
   --show-version               Print current playbook version and exit
   --help                       Show this help
@@ -206,6 +209,18 @@ cleanup_stale_claude() {
 
 # --- Format-specific sync/check functions ---
 
+safe_backup() {
+  local src_file="$1" dest_file="$2"
+  if $SAFE_MODE && [ -f "$dest_file" ]; then
+    if ! diff -q "$src_file" "$dest_file" > /dev/null 2>&1; then
+      local bak="${dest_file}.bak"
+      cp "$dest_file" "$bak"
+      echo "    ↳ backed up $(basename "$dest_file") → $(basename "$bak")"
+      safe_backup_count=$((safe_backup_count + 1))
+    fi
+  fi
+}
+
 sync_cursor_to() {
   local dest="$1"
   if $DRY_RUN; then
@@ -214,6 +229,7 @@ sync_cursor_to() {
   fi
   mkdir -p "$dest"
   for f in "${MDC_FILES[@]}"; do
+    safe_backup "$SRC/$f" "$dest/$f"
     cp "$SRC/$f" "$dest/$f"
   done
   cleanup_stale_cursor "$dest"
@@ -228,6 +244,17 @@ sync_claude_to() {
   mkdir -p "$dest"
   for f in "${MDC_FILES[@]}"; do
     local md_name="${f%.mdc}.md"
+    if $SAFE_MODE && [ -f "$dest/$md_name" ]; then
+      local expected
+      expected="$(strip_frontmatter "$SRC/$f")"
+      local actual
+      actual="$(cat "$dest/$md_name")"
+      if [[ "$expected" != "$actual" ]]; then
+        cp "$dest/$md_name" "$dest/${md_name}.bak"
+        echo "    ↳ backed up $md_name → ${md_name}.bak"
+        safe_backup_count=$((safe_backup_count + 1))
+      fi
+    fi
     strip_frontmatter "$SRC/$f" > "$dest/$md_name"
   done
   cleanup_stale_claude "$dest"
@@ -419,6 +446,7 @@ repo_count=0
 wt_count=0
 stale_count=0
 error_count=0
+safe_backup_count=0
 errors_summary=()
 
 FORMATS_TO_RUN=()
@@ -469,6 +497,9 @@ elif $CHECK_MODE; then
   fi
 else
   echo "Done. ${#MDC_FILES[@]} rules ($fmt_label$ver_label) → $repo_count repos + $wt_count worktrees."
+  if $SAFE_MODE && [ $safe_backup_count -gt 0 ]; then
+    echo "$safe_backup_count file(s) had local changes — .bak copies preserved."
+  fi
 fi
 
 if [ $error_count -gt 0 ]; then
