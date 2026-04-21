@@ -7,6 +7,7 @@ All notable changes to the playbook rules and scripts. Format: date, affected fi
 ### Governance
 - **CODE_OF_CONDUCT.md**: New — adopts The Agentic Covenant v1.0, the first Code of Conduct for human-agent collaboration (upstream: gastownhall/beads). Customized for Pryon internal context.
 - **docs/governance.md**: New — comprehensive guide connecting governance to the playbook. Positions the four-layer stack (governance + discipline + onboarding + tooling) as thought leadership. Explains Agentic Covenant principles, ZFC alignment, and adoption guide for project repos.
+- **docs/blog-agentic-covenant.md**: New — draft blog post "Every Project Is Writing the Same AI Policy From Scratch." Positions the Agentic Covenant as the answer to defensive AI policies. Ready for Medium/LinkedIn publishing.
 
 ### Docs
 - **docs/ecosystem-integration.md**: Added Agentic Covenant as the governance layer atop the three-repo ecosystem diagram. Updated "how they fit together" to include governance.
@@ -15,6 +16,11 @@ All notable changes to the playbook rules and scripts. Format: date, affected fi
 - **CONTRIBUTING.md**: Added Code of Conduct section referencing the Agentic Covenant.
 - **README.md**: Added CODE_OF_CONDUCT.md and docs/governance.md to documentation table.
 - **PLAN.md**: Added workstream 8 (Governance and thought leadership) documenting all new artifacts, cross-references with beads, and next steps.
+- **docs/confluence-orientation-draft.md**: Added governance section (Agentic Covenant), updated "four components" to "five components," added governance guide to learn-more links.
+
+### Scripts
+- **playbook-init.sh**: Now copies CODE_OF_CONDUCT.md from the playbook into the project during setup. Respects existing files (no overwrite). Summary now shows Agentic Covenant as an installed artifact.
+- **playbook-doctor.sh**: New "Governance" check validates CODE_OF_CONDUCT.md is present and contains "Agentic Covenant." Warning (not failure) if missing — governance is recommended, not required.
 
 ## 2026-04-19
 

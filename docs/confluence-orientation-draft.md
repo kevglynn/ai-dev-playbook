@@ -76,9 +76,23 @@ Open `sandbox/project/` in your editor, follow the [Walkthrough](../sandbox/WALK
 
 **Evidence on close.** "Done" means showing your work — test output, build clean, or a manual verification note mapped to each AC. Not just "it's done, trust me."
 
+## Governance: The Agentic Covenant
+
+The playbook now includes a governance layer — **[The Agentic Covenant](https://github.com/gastownhall/beads/blob/main/CODE_OF_CONDUCT.md)**, the first Code of Conduct designed for communities where humans and AI agents collaborate.
+
+**Why it matters for your team:**
+
+- **Operator accountability.** The person who directs an agent is responsible for everything that agent does. "My AI wrote that" is not a defense. This is the governance equivalent of the Planner/Executor model.
+- **Understanding over authorship.** The quality bar is: can you explain it, maintain it, and take responsibility when it breaks? This directly supports agent-assisted development — we judge contributions on quality, not tooling.
+- **Disclosure safe harbor.** If you disclose AI involvement (using the `Assisted-by` tag in commits), that disclosure can never be used against you. Transparency is protected.
+- **Contributor protection.** If you have an open PR, an agent can't silently rewrite and replace your work. First-mover priority is protected.
+
+When you run `playbook-init.sh`, it installs `CODE_OF_CONDUCT.md` alongside the rules. See the [governance guide](governance.md) for how governance fits into the full stack.
+
 ## Learn more
 
-- **[Core Concepts](concepts.md)** — Why the playbook exists and how the four components work together
+- **[Core Concepts](concepts.md)** — Why the playbook exists and how the five components work together
+- **[Governance Guide](governance.md)** — How governance fits into the playbook and positions us as thought leaders
 - **[FAQ](faq.md)** — Common questions from people adopting the playbook
 - **[Quick Start](../QUICKSTART.md)** — Detailed setup for Cursor and Claude Code users
 - **[Onboarding Sandbox](../sandbox/)** — Hands-on 45-minute exercise teaching the full workflow by doing

@@ -168,6 +168,20 @@ elif [ -n "$scratchpad" ] && [ -f "$scratchpad" ]; then
   echo "✓ Scratchpad already exists (not overwriting)"
 fi
 
+# ---------- Governance ----------
+
+coc_src="$PLAYBOOK_ROOT/CODE_OF_CONDUCT.md"
+coc_dest="$PROJECT_ROOT/CODE_OF_CONDUCT.md"
+
+if [ -f "$coc_src" ]; then
+  if [ -f "$coc_dest" ]; then
+    echo "✓ CODE_OF_CONDUCT.md already exists (not overwriting)"
+  else
+    cp -f "$coc_src" "$coc_dest"
+    echo "✓ Copied CODE_OF_CONDUCT.md (Agentic Covenant)"
+  fi
+fi
+
 # ---------- Sync targets ----------
 
 TARGETS_FILE="$HOME/.playbook-sync-targets"
@@ -188,6 +202,7 @@ echo "  • $(ls -1 "$PROJECT_ROOT/.cursor/rules/"*.mdc 2>/dev/null | wc -l | tr
 echo "  • $(ls -1 "$PROJECT_ROOT/claude/rules/"*.md 2>/dev/null | wc -l | tr -d ' ') Claude rules" 2>/dev/null || true
 echo "  • Beads task tracking (bd list, bd ready, bd create)"
 echo "  • Scratchpad for cross-session context"
+[ -f "$coc_dest" ] && echo "  • Agentic Covenant (CODE_OF_CONDUCT.md)"
 echo ""
 echo "Next steps:"
 echo "  1. Open this project in your editor"

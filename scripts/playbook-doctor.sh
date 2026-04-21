@@ -179,6 +179,22 @@ fi
 
 echo ""
 
+# ---------- Governance ----------
+
+echo "Governance:"
+
+if [ -f "$PROJECT_ROOT/CODE_OF_CONDUCT.md" ]; then
+  if grep -qF "Agentic Covenant" "$PROJECT_ROOT/CODE_OF_CONDUCT.md" 2>/dev/null; then
+    check_pass "CODE_OF_CONDUCT.md present (Agentic Covenant)"
+  else
+    check_warn "CODE_OF_CONDUCT.md exists but may not be the Agentic Covenant"
+  fi
+else
+  check_warn "No CODE_OF_CONDUCT.md — consider adopting the Agentic Covenant"
+fi
+
+echo ""
+
 # ---------- Worktree hook ----------
 
 echo "Worktree support:"
