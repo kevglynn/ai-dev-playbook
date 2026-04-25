@@ -20,6 +20,30 @@ This playbook is a shared asset. Contributions — new rules, rule improvements,
 
 **New rules**: Start with the issue process above. New rules should have a clear domain that doesn't overlap with existing rules. The operating model rule is the router — it references all other rules but shouldn't absorb their content.
 
+## Rule change intake — field lessons
+
+Real incidents — bugs shipped, beads closed on IOUs, tests that missed the callsite — are the highest-signal input to rule changes. Lessons come from any repo the operator works in. The playbook consumes them on these terms:
+
+1. **Universal form only.** The proposed rule edit must be project-agnostic. Strip language, framework, library, and project names from the rule text. If the rule only makes sense with that context, it is not rule-worthy — it belongs as a project memory (`bd remember`), not a playbook rule.
+2. **Project-specific patterns stay in the originating repo's `bd memories`.** The playbook rule captures the universal policy; the originating project's memory captures the specific pattern to grep for, the library quirk, the stack trace. The two complement each other and should not be merged.
+3. **Proposal-first, apply-second.** The requesting party (operator, subagent, or colleague) drafts the diff as a proposal — no edits to `.mdc` files until the playbook operator approves. This protects the rule surface from hasty or inconsistent changes.
+4. **CHANGELOG attribution is technical, not nominal.** Describe the shape of the incident — what class of failure, what the rule prevents — without naming specific projects unless the project is part of this repo's ecosystem. Colleagues reading the CHANGELOG should learn what the rule does, not need context about unrelated repos.
+5. **Tooling enforcement is a separate concern.** If the lesson suggests that a tool (e.g., `bd`, lint-style checks) should enforce the policy at runtime, that is a feature request against the tool's repo, not a playbook rule change. The playbook says *what* should be true; tools can enforce *at the boundary*. Keep the two tracks separate and file them independently.
+
+### When intake is rule-worthy vs memory-worthy
+
+Ask: "Would the next session of any agent, in any repo, benefit from knowing this — or is it specific to this codebase's libraries, frameworks, or history?" Universal → rule. Specific → memory.
+
+Examples:
+
+| Incident | Rule-worthy universal lesson | Memory-worthy specific pattern |
+|---|---|---|
+| Agent closed a bug bead with "will be re-verified in PR manual-check" and the bug reached production | "Close reasons cannot defer AC verification" (→ `bead-completion.mdc`) | N/A — the lesson is universal |
+| Swift String closed-range crash where `replaceSubrange(a...b, ...)` with `b == endIndex` panics | "After a helper fix, grep for the bug pattern class across the codebase" (→ `pragmatic-tdd.mdc`) | "Swift closed-range on String where `upperBound == endIndex` crashes — prefer half-open ranges" (→ that project's `bd remember`) |
+| A race condition pattern unique to one app's event bus | N/A — too specific | "Event bus `publish()` is async but `subscribe()` is sync — ordering is not guaranteed" (→ that project's `bd remember`) |
+
+When in doubt, propose both: a rule edit (universal) and a memory (specific). They strengthen each other and are cheap to maintain together.
+
 ## The edit/sync/test cycle
 
 ### 1. Edit the canonical source

@@ -82,7 +82,7 @@ Use `--ephemeral` for short-lived tracking that doesn't warrant permanent storag
 3. **Stale accumulation.** Opening beads and never closing or deferring them. If a bead hasn't been touched in a week, defer it, close as "won't do," or reassess priority. `bd stale` catches these.
 4. **Duplicate creation.** Creating a new bead without checking `bd search` first. Two beads tracking the same work confuse agents and users.
 5. **Orphaned in-progress.** Claiming a bead and ending the session without closing it or noting progress. Always `bd note <id> "Progress: ..."` before session end if the bead isn't done.
-6. **Evidence-free closes.** `bd close --reason "Done"` with no AC mapping. The close reason must reference specific ACs and evidence (test output, commit hash, manual verification).
+6. **Evidence-free closes.** `bd close --reason "Done"` with no AC mapping. Every close reason must reference specific ACs and evidence (test output, commit hash, manual verification). **"Will be verified later," "deferred to PR review," or "to be re-checked during integration" are IOUs, not evidence.** See `bead-completion.mdc` § "Do not defer AC verification" for the four legitimate ways to handle an AC that can't be verified in the current session (do it now, leave in_progress, block, or split to a follow-up bead).
 7. **AC as implementation steps.** "Add isLoading state variable" is an implementation step, not an AC. ACs describe observable outcomes: "Loading indicator appears when switching tabs."
 
 ## When closing beads

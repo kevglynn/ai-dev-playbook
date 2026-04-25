@@ -2,12 +2,35 @@
 
 All notable changes to the playbook rules and scripts. Format: date, affected files, what changed.
 
+## 2026-04-23
+
+### Rules
+- **agent-identity.mdc**: Added "Self-correction protocol" section with a mechanical banned-token scan (time units, team-size claims, schedule framing, estimation verbs) and an explicit "not regressions" list (historical facts, product/API behavior, quoted references, agent-process units) so the rule can be enforced as a deterministic post-write check rather than a vibe. Inline-correction protocol added — no length apologies, just fix and continue. Propagated to all three copies: `cursor/rules/` (canonical), `.cursor/rules/` (dogfood), `claude/rules/` (generated via `sync-rules.sh --format claude --local`).
+- **bead-completion.mdc**: New "Do not defer AC verification" subsection under "Evidence policy." Names the anti-pattern (IOU close reasons like "will be re-verified in the PR manual-check pass") as equivalent to un-verified ACs, and enumerates the four legitimate handling paths when a manual step cannot be done in the current session (do it now, leave in_progress, block, or split to a follow-up bead that exists at close time). Sourced from a field incident where a Swift closed-range bug reached production because a bug bead closed with an AC marked "will be re-verified" and a second crash site was never scanned for.
+- **beads-quality.mdc**: Extended anti-pattern #6 (Evidence-free closes) with explicit examples of IOU phrases ("will be verified later," "deferred to PR review," "to be re-checked during integration") and a pointer to the new `bead-completion.mdc` subsection for the four legitimate alternatives. Rule now names the pattern colleagues actually regress toward.
+- **pragmatic-tdd.mdc**: Added step 5 to "Bug beads — test first, always" — after writing the reproducing test and fix, scan the codebase (`rg`/`grep`) for the bug pattern class, not just the specific line. Fix every matching site or file follow-up beads before closing. Added entry #5 to the "Zero-signal test taxonomy" — helper-only tests that skip the original callsite. Testing an extracted helper in isolation does not prove the fix reaches the callsite that triggered the bug (especially when the callsite inlines the pattern rather than calling the helper). Both additions sourced from the same field incident as the `bead-completion.mdc` change: helper-only test suite was 10/10 green while a second crash site went unexercised.
+
+### Scripts
+- **install-global-safety-net.sh**: New — one-time per-machine install of a condensed `agent-identity` block into `~/CLAUDE.md` and a paste-ready snippet for Cursor's Global Preferences user rule. Idempotent write (marker-delimited, `<!-- BEGIN/END ai-dev-playbook:agent-identity -->`), pure-bash block management (BSD-awk-safe), supports `--check` and `--uninstall`. Solves the "fresh repo without bootstrapping reverts to human-hour estimates" regression by giving the principle a per-machine home that survives missing `.cursor/rules/`.
+- **playbook-doctor.sh**: Added "Global safety net" check section — delegates to `install-global-safety-net.sh --check` and warns (not fails) if the block is missing or stale. Keeps doctor as the single pane of glass for "is my setup complete?"
+
+### Docs
+- **README.md**: Added `install-global-safety-net.sh` to the scripts table. Updated `playbook-doctor.sh` row to mention the new check.
+- **QUICKSTART.md**: New "One-time: install the global safety net" section explaining the workspace-scoping gap honestly and pointing at the installer. Positions the safety net as per-machine belt-and-suspenders for the per-repo `agent-identity.mdc`.
+- **CONTRIBUTING.md**: New "Rule change intake — field lessons" section formalizing how incidents from any repo (Pryon or external) flow into playbook rule changes. Codifies five intake terms (universal form, project-specific patterns stay in the originating repo's `bd memories`, proposal-first, technical attribution in CHANGELOG, tooling enforcement as a separate track) and a rule-worthy vs memory-worthy decision table with examples. Formalizes the ad-hoc pattern that earlier PRs followed instinctively.
+- **docs/proposed-upstream/bd-close-iou-refusal.md**: New — draft feature proposal for the upstream `beads` project to add runtime enforcement of the "no IOU close reasons" policy. Complements the `bead-completion.mdc` rule by proposing that `bd close` scan close reasons for IOU phrases and prompt/refuse. Rule-level policy + tool-level enforcement is the two-layer defense; this artifact captures the tool-level half so it can be filed against the beads project when the operator chooses.
+
+### Why
+The per-repo `agent-identity.mdc` rule has exactly one failure mode: it doesn't apply where it isn't installed. Caught the regression live in a fresh repo (`xmr-games`) where the agent reverted to "this will take N weeks with one developer" framing within a single response. The Tier 3 hardening (banned-token scan) makes the rule more robust where it is installed; the Tier 1 global safety net (installer + doctor integration) closes the gap where it isn't. Colleagues get Tier 3 automatically via `sync-rules.sh`; Tier 1 is an opt-in one-liner per machine with doctor visibility.
+
 ## 2026-04-21
 
 ### Governance
 - **CODE_OF_CONDUCT.md**: New — adopts The Agentic Covenant v1.0, the first Code of Conduct for human-agent collaboration (upstream: gastownhall/beads). Customized for Pryon internal context.
 - **docs/governance.md**: New — comprehensive guide connecting governance to the playbook. Positions the four-layer stack (governance + discipline + onboarding + tooling) as thought leadership. Explains Agentic Covenant principles, ZFC alignment, and adoption guide for project repos.
 - **docs/blog-agentic-covenant.md**: New — draft blog post "Every Project Is Writing the Same AI Policy From Scratch." Positions the Agentic Covenant as the answer to defensive AI policies. Ready for Medium/LinkedIn publishing.
+- **docs/illustrations/ai-policy-landscape.html**: New — standalone browser diagram of the AI policy spectrum (BAN→GOVERN) for article screenshots; `?light=1` for light background. **docs/illustrations/README.md** explains usage.
+- **docs/blog-medium.md** / **docs/blog-linkedin.md**: Publishing notes — landscape figure via HTML screenshot, not generative image tools.
 
 ### Docs
 - **docs/ecosystem-integration.md**: Added Agentic Covenant as the governance layer atop the three-repo ecosystem diagram. Updated "how they fit together" to include governance.

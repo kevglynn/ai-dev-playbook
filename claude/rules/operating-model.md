@@ -163,6 +163,22 @@ Before ending work:
 
 **Aliases:** `bd done` = `bd close`, `bd view` = `bd show`, `bd new` = `bd create`.
 
+## Jawnt MCP vs Local bd
+
+When Jawnt MCP tools are available, agents have two ways to interact with beads. Use the right one:
+
+| Operation | Use | Why |
+|-----------|-----|-----|
+| **Cross-project reads** (what's ready across all projects, what's blocked everywhere, search memories) | Jawnt MCP (`find_ready_work`, `find_blocked_work`, `list_beads`, `search_memories`) | MCP aggregates across all bookmarked projects; `bd` only sees the current project |
+| **Current-project reads** (list issues, show a bead, check status) | Either — `bd list`, `bd show` locally or `list_beads`/`get_bead` via MCP | Local `bd` is faster for single-project queries |
+| **Morning triage** (start of day, standup, what changed) | Jawnt MCP `daily_brief` | One call returns ready work + blocked work + recent activity across all projects |
+| **All writes** (create, close, update, note, remember, claim, defer) | Local `bd` — always | MCP tools are read-only; only `bd` can mutate bead state |
+| **Session start context** | `bd prime` locally, then MCP for cross-project awareness | `bd prime` loads memories and project state for the current project; MCP adds the multi-project view |
+
+**When MCP is unavailable:** Fall back to local `bd` for everything. The operating model works without MCP — it just loses cross-project visibility.
+
+**Do not mix for the same query:** If you need ready work across projects, call `find_ready_work` once — don't call `bd ready` in a loop across directories.
+
 ## Project Hygiene
 
 ### Per-session (every session start and close)

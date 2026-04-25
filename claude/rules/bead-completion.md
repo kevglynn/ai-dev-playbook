@@ -42,6 +42,19 @@ Every close reason must include evidence mapped to acceptance criteria:
 | Milestone | "N/A — milestone marker, verify children are closed" |
 | Epic | "N/A — container, verify all children closed via `bd epic close-eligible`" |
 
+### Do not defer AC verification
+
+Every AC must be verified with evidence **before close**, not scheduled for later. A close reason like "will be re-verified in the PR manual-check pass" or "deferred to integration testing" is an **IOU, not evidence** — indistinguishable to the reader from "this AC was not verified." Acceptance criteria that close on IOUs are how real-world failures reach users after 10/10 green unit tests.
+
+When an AC requires a manual step (rebuild, UI click, external system check, integration verification) that you cannot do in the current session, choose one — never invent a fifth option:
+
+1. **Do the step.** Rebuild, click, run — actually verify, then close with the observed result. This is almost always correct when you have the environment available.
+2. **Leave the bead `in_progress`.** Use `bd note <id> "Pending: <what needs verification>"` and close only after verification happens.
+3. **Block the bead** (`bd update <id> --status=blocked`) on the verification activity if it requires another agent or environment.
+4. **Split the AC into a follow-up bead** scoped to the verification. The original bead may close with "AC N deferred to bead <new-id>" — but only if the follow-up bead exists at time of close, not as an intent.
+
+The invariant: the close reason carries evidence for every AC, **or** the AC has been explicitly moved to a follow-up bead that exists at close time. "Later" is not an acceptable close state.
+
 See `beads-quality.mdc` for close reason format and examples.
 
 ## After closing — workflow continuation
