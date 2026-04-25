@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2059
-set -uo pipefail
+set -euo pipefail
 
 # Multi-format rule sync from ai-dev-playbook (canonical source) to target
 # repos AND their git worktrees.
@@ -26,7 +26,10 @@ FORMAT="cursor"
 CHECK_MODE=false
 LOCAL_ONLY=false
 DRY_RUN=false
-SAFE_MODE=false
+# SAFE_MODE defaults to true: any locally modified target file is backed
+# up as .bak before being overwritten. Pass --unsafe to allow silent
+# overwrite (rarely correct; kept for parity with prior behavior).
+SAFE_MODE=true
 PIN_VERSION=""
 USE_VERSIONED_SRC=false
 
@@ -37,6 +40,7 @@ while [[ $# -gt 0 ]]; do
     --local)   LOCAL_ONLY=true; shift ;;
     --dry-run) DRY_RUN=true; shift ;;
     --safe)    SAFE_MODE=true; shift ;;
+    --unsafe)  SAFE_MODE=false; shift ;;
     --version) PIN_VERSION="$2"; shift 2 ;;
     --show-version)
       if [ -f "$PLAYBOOK_ROOT/VERSION" ]; then
@@ -57,7 +61,8 @@ Options:
   --check                      Report drift without syncing
   --local                      Generate in this repo only (claude/all)
   --dry-run                    Preview what would be written
-  --safe                       Back up locally modified files before overwriting
+  --safe                       Back up locally modified files (default: ON)
+  --unsafe                     Disable safe-mode backups (silent overwrite)
   --version TAG                Sync rules from a specific git tag (e.g. v1.0.0)
   --show-version               Print current playbook version and exit
   --help                       Show this help
@@ -406,7 +411,7 @@ sync_repo() {
       if ! $DRY_RUN; then echo "Synced ($label) → $repo_root"; fi
     fi
   elif [[ "$fmt" == "claude" ]]; then
-    local claude_dest="$repo_root/claude/rules"
+    local claude_dest="$repo_root/.claude/rules"
     if $CHECK_MODE; then
       echo "Checking ($label): $repo_root"
       check_claude_in "$claude_dest" || return 1

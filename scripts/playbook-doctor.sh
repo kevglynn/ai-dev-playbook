@@ -5,18 +5,34 @@ set -uo pipefail
 # Reports issues with fix commands. CI-friendly exit code.
 #
 # Usage:
-#   ./scripts/playbook-doctor.sh              # Check current directory
-#   ./scripts/playbook-doctor.sh /path/to/project  # Check specific project
+#   ./scripts/playbook-doctor.sh                    # Check current directory
+#   ./scripts/playbook-doctor.sh /path/to/project   # Check specific project
+#   ./scripts/playbook-doctor.sh --agent            # Agent-consumable output
 #   ./scripts/playbook-doctor.sh --help
+#
+# --agent mode emits a final "SUMMARY: <key>" line and uses structured exit
+# codes for agent branching. See the agent-protocol global safety-net block
+# for the full contract.
+#
+# Exit codes:
+#   0 = ok (no action needed)
+#   2 = bootstrap_needed (no rules in this repo)
+#   3 = rules_drift (rules present but stale vs playbook source)
+#   4 = playbook_outdated (reserved; not emitted in phase 1)
+#   1 = generic error / other failure
 
 PLAYBOOK_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-PROJECT_ROOT="${1:-$(pwd)}"
+AGENT_MODE=false
+PROJECT_ROOT=""
 
-if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
-  cat <<'EOF'
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --agent)  AGENT_MODE=true; shift ;;
+    -h|--help)
+      cat <<'EOF'
 Validates playbook setup for a project. Reports issues with fix commands.
 
-Usage: playbook-doctor.sh [project-path]
+Usage: playbook-doctor.sh [project-path] [--agent]
 
 Checks:
   • bd (beads) is on PATH
@@ -25,11 +41,41 @@ Checks:
   • Scratchpad exists with correct sections
   • Project is in ~/.playbook-sync-targets
   • Worktree hook present (if repo has worktrees)
+  • Global safety net installed (per-machine agent rule blocks)
 
-Exit code: 0 = all pass, 1 = issues found
+Flags:
+  --agent   Emit a machine-consumable SUMMARY line and use structured
+            exit codes (0=ok, 2=bootstrap_needed, 3=rules_drift,
+            4=playbook_outdated, 1=error).
+  --help    Show this help.
+
+Exit codes (human mode): 0 = all pass, 1 = issues found.
 EOF
-  exit 0
+      exit 0
+      ;;
+    --*) echo "Unknown option: $1 (use --help)" >&2; exit 1 ;;
+    *)
+      if [ -z "$PROJECT_ROOT" ]; then
+        PROJECT_ROOT="$1"
+      else
+        echo "Too many arguments (use --help)" >&2
+        exit 1
+      fi
+      shift
+      ;;
+  esac
+done
+
+PROJECT_ROOT="${PROJECT_ROOT:-$(pwd)}"
+
+# --- Path validation (hardening for --agent mode, light checks otherwise) ---
+if [ ! -d "$PROJECT_ROOT" ]; then
+  echo "ERROR: project path does not exist: $PROJECT_ROOT" >&2
+  if $AGENT_MODE; then echo "SUMMARY: error"; fi
+  exit 1
 fi
+# Resolve to absolute path (no symlink resolution assumptions)
+PROJECT_ROOT="$(cd "$PROJECT_ROOT" && pwd)"
 
 echo "=== Playbook Doctor: $(basename "$PROJECT_ROOT") ==="
 echo ""
@@ -37,6 +83,12 @@ echo ""
 pass=0
 fail=0
 warn=0
+
+# Agent-mode state: tracks the specific class of issue so SUMMARY can
+# select the most accurate remediation category. Priority on exit:
+# bootstrap_needed > rules_drift > error > ok.
+bootstrap_missing=0
+rules_stale=0
 
 check_pass() { echo "  ✓ $1"; pass=$((pass + 1)); }
 check_fail() { echo "  ✗ $1"; echo "    Fix: $2"; fail=$((fail + 1)); }
@@ -65,7 +117,7 @@ echo ""
 echo "Rules:"
 
 cursor_rules="$PROJECT_ROOT/.cursor/rules"
-claude_rules="$PROJECT_ROOT/claude/rules"
+claude_rules="$PROJECT_ROOT/.claude/rules"
 has_cursor=false
 has_claude=false
 
@@ -89,9 +141,11 @@ if [ -d "$cursor_rules" ]; then
       check_pass "Cursor rules: $mdc_count files, all up to date"
     else
       check_fail "Cursor rules: $stale of $mdc_count are stale" "$PLAYBOOK_ROOT/scripts/sync-rules.sh --format cursor"
+      rules_stale=1
     fi
   else
     check_fail "Cursor rules: $mdc_count files (expected $src_count)" "$PLAYBOOK_ROOT/scripts/sync-rules.sh --format cursor"
+    rules_stale=1
   fi
 else
   check_warn "No Cursor rules (.cursor/rules/ not found)"
@@ -104,11 +158,13 @@ if [ -d "$claude_rules" ]; then
     check_pass "Claude rules: $md_count files present"
   else
     check_fail "Claude rules directory exists but is empty" "$PLAYBOOK_ROOT/scripts/sync-rules.sh --format claude"
+    rules_stale=1
   fi
 fi
 
 if ! $has_cursor && ! $has_claude; then
-  check_fail "No rules found (neither .cursor/rules/ nor claude/rules/)" "bash $PLAYBOOK_ROOT/scripts/playbook-init.sh"
+  check_fail "No rules found (neither .cursor/rules/ nor .claude/rules/)" "bash $PLAYBOOK_ROOT/scripts/playbook-init.sh"
+  bootstrap_missing=1
 fi
 
 echo ""
@@ -195,6 +251,30 @@ fi
 
 echo ""
 
+# ---------- Global safety net (per-machine) ----------
+
+echo "Global safety net:"
+
+installer="$PLAYBOOK_ROOT/scripts/install-global-safety-net.sh"
+if [ -x "$installer" ]; then
+  status_output="$(bash "$installer" --check 2>&1)"
+  status_code=$?
+  if [ $status_code -eq 0 ]; then
+    check_pass "Global agent-identity block installed in ~/CLAUDE.md"
+  else
+    first_line="$(printf '%s\n' "$status_output" | head -n 1)"
+    if printf '%s' "$first_line" | grep -qF "out of date"; then
+      check_warn "Global safety net present in ~/CLAUDE.md but out of date — re-run: bash $installer"
+    else
+      check_warn "Global safety net not installed — optional but recommended for new repos: bash $installer"
+    fi
+  fi
+else
+  check_warn "Global safety net installer not found at $installer"
+fi
+
+echo ""
+
 # ---------- Worktree hook ----------
 
 echo "Worktree support:"
@@ -216,6 +296,31 @@ echo ""
 
 total=$((pass + fail + warn))
 echo "=== Results: $pass passed, $fail failed, $warn warnings (of $total checks) ==="
+
+# --- Agent-mode structured summary + exit ---
+#
+# Priority: bootstrap_needed > rules_drift > error > ok. The SUMMARY line
+# is a stable contract; do not emit user-controlled paths or free-form
+# strings — only the fixed enum keys below.
+if $AGENT_MODE; then
+  if [ $bootstrap_missing -eq 1 ]; then
+    echo ""
+    echo "SUMMARY: bootstrap_needed"
+    exit 2
+  elif [ $rules_stale -eq 1 ]; then
+    echo ""
+    echo "SUMMARY: rules_drift"
+    exit 3
+  elif [ $fail -gt 0 ]; then
+    echo ""
+    echo "SUMMARY: error"
+    exit 1
+  else
+    echo ""
+    echo "SUMMARY: ok"
+    exit 0
+  fi
+fi
 
 if [ $fail -gt 0 ]; then
   echo ""

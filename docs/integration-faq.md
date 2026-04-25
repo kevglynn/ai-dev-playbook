@@ -76,7 +76,7 @@ Yes. The same 8 rules exist in both formats:
 bash ~/ai-dev-playbook/scripts/playbook-init.sh --tool claude
 ```
 
-This copies the rules as `.md` files into `claude/rules/`. The content is identical — only the format differs (`.mdc` with YAML frontmatter for Cursor, plain `.md` for Claude Code). `sync-rules.sh --format claude` keeps them updated.
+This copies the rules as `.md` files into `.claude/rules/` (where Claude Code auto-discovers them). The content is identical — only the format differs (`.mdc` with YAML frontmatter for Cursor, plain `.md` for Claude Code). `sync-rules.sh --format claude` keeps them updated.
 
 ## Context and performance
 
