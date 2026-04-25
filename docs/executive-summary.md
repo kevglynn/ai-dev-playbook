@@ -88,5 +88,5 @@ Each phase has a gate. We don't advance until the current phase proves out.
 | **Stringer Workflow Deck** | Concrete demo of data-driven backlog generation with real repo data |
 | **Glossary** | `docs/glossary.md` — plain-English definitions of all terminology |
 | **ai-dev-playbook Repo** | Shared agent rules, scripts, Stringer analyses, and all operating model docs |
-| **[Core Concepts](concepts.md)** | How the four playbook components (beads, rules, Planner/Executor, scratchpad) work together |
+| **[Core Concepts](concepts.md)** | How the five playbook components (beads, rules, Planner/Executor, scratchpad, governance) work together |
 | **[Quick Start](../QUICKSTART.md)** | Set up the playbook in your project in under 5 minutes |

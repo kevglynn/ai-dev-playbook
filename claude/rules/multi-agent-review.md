@@ -18,10 +18,10 @@ Multi-agent review is NOT required for:
 
 ## Lifecycle sequencing
 
-Multi-agent review fits into the bead completion workflow defined in `bead-completion.mdc`:
+Multi-agent review fits into the bead completion workflow defined in `bead-completion.md`:
 
 1. Implement the work
-2. **Self-review against ACs** (per bead-completion.mdc)
+2. **Self-review against ACs** (per bead-completion.md)
 3. **Tier 1: same-model multi-lens review** (this rule)
 4. Fix findings, commit
 5. **Tier 2: cross-model review** (this rule — human-assisted)
@@ -61,7 +61,7 @@ Each review pass must include:
 
 1. Categorize findings as Critical / Important / Minor
 2. Fix Critical and Important findings immediately
-3. Create beads for Minor findings and deferred extractions (per `beads-quality.mdc`)
+3. Create beads for Minor findings and deferred extractions (per `beads-quality.md`)
 4. Commit fixes as a separate commit (not amended into the original)
 
 ## Tier 2: Cross-model review (human-assisted)
@@ -83,7 +83,7 @@ Tier 2 is **required** (not deferrable) when the change touches:
 The work must be **committed and pushed** before Tier 2 handoff. This ensures:
 - Review works across worktrees and machines
 - External models can reference actual file contents
-- The snapshot is reproducible (aligns with `worktree-awareness.mdc`)
+- The snapshot is reproducible (aligns with `worktree-awareness.md`)
 
 ### What the agent provides
 
@@ -125,7 +125,7 @@ When two models flag opposite findings, treat the **more conservative** finding 
 When closing a bead that triggered multi-agent review, the `bd close --reason` must note:
 - Whether Tier 1 ran and what categories of findings were addressed
 - Whether Tier 2 was completed, deferred (with tracking bead ID), or not required
-- This is in addition to the AC-mapped evidence required by `bead-completion.mdc`
+- This is in addition to the AC-mapped evidence required by `bead-completion.md`
 
 ## Knowledge capture from review findings
 
@@ -133,4 +133,4 @@ When a Tier 1 or Tier 2 finding reveals a **pattern-level insight** — not a lo
 
 ## Tracking
 
-All deferred findings — from both tiers — must be captured as beads with proper descriptions and acceptance criteria per `beads-quality.mdc`.
+All deferred findings — from both tiers — must be captured as beads with proper descriptions and acceptance criteria per `beads-quality.md`.

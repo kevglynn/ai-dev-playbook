@@ -11,7 +11,7 @@ Specialized rules (pragmatic-tdd, beads-quality, bead-completion, design-docs, w
 
 ## Roles
 
-You are a multi-agent system coordinator, playing two roles: Planner and Executor. You decide next steps based on the project scratchpad (`.cursor/scratchpad.md` or equivalent location for your tool). When the user doesn't specify a mode, ask which to proceed in.
+You are a multi-agent system coordinator, playing two roles: Planner and Executor. You decide next steps based on the project scratchpad (`.cursor/scratchpad.md` for Cursor, `scratchpad.md` for Claude Code). When the user doesn't specify a mode, ask which to proceed in.
 
 ### Mode Switching
 

@@ -41,6 +41,37 @@ while [[ $# -gt 0 ]]; do
     --dry-run) DRY_RUN=true; shift ;;
     --safe)    SAFE_MODE=true; shift ;;
     --unsafe)  SAFE_MODE=false; shift ;;
+    --prune)
+      prune_file="$HOME/.playbook-sync-targets"
+      if [ ! -f "$prune_file" ]; then
+        echo "No ~/.playbook-sync-targets file found."
+        exit 1
+      fi
+      pruned=0
+      cleaned=""
+      while IFS= read -r line; do
+        raw="$line"
+        expanded="${line/#\~/$HOME}"
+        # Preserve comments and blank lines
+        if [[ "$raw" =~ ^[[:space:]]*# ]] || [[ -z "${raw// /}" ]]; then
+          cleaned+="$raw"$'\n'
+          continue
+        fi
+        if [ -d "$expanded" ]; then
+          cleaned+="$raw"$'\n'
+        else
+          echo "  Removed: $raw (path does not exist)"
+          pruned=$((pruned + 1))
+        fi
+      done < "$prune_file"
+      printf '%s' "$cleaned" > "$prune_file"
+      if [ $pruned -eq 0 ]; then
+        echo "All targets exist. Nothing to prune."
+      else
+        echo "Pruned $pruned stale target(s) from ~/.playbook-sync-targets."
+      fi
+      exit 0
+      ;;
     --version) PIN_VERSION="$2"; shift 2 ;;
     --show-version)
       if [ -f "$PLAYBOOK_ROOT/VERSION" ]; then
@@ -64,6 +95,7 @@ Options:
   --safe                       Back up locally modified files (default: ON)
   --unsafe                     Disable safe-mode backups (silent overwrite)
   --version TAG                Sync rules from a specific git tag (e.g. v1.0.0)
+  --prune                      Remove stale (non-existent) paths from sync targets
   --show-version               Print current playbook version and exit
   --help                       Show this help
 
@@ -251,7 +283,7 @@ sync_claude_to() {
     local md_name="${f%.mdc}.md"
     if $SAFE_MODE && [ -f "$dest/$md_name" ]; then
       local expected
-      expected="$(strip_frontmatter "$SRC/$f")"
+      expected="$(strip_frontmatter "$SRC/$f" | sed 's/\.mdc/\.md/g')"
       local actual
       actual="$(cat "$dest/$md_name")"
       if [[ "$expected" != "$actual" ]]; then
@@ -260,7 +292,7 @@ sync_claude_to() {
         safe_backup_count=$((safe_backup_count + 1))
       fi
     fi
-    strip_frontmatter "$SRC/$f" > "$dest/$md_name"
+    strip_frontmatter "$SRC/$f" | sed 's/\.mdc/\.md/g' > "$dest/$md_name"
   done
   cleanup_stale_claude "$dest"
 }
@@ -293,7 +325,7 @@ check_claude_in() {
       stale=1
     else
       local expected
-      expected="$(strip_frontmatter "$SRC/$f")"
+      expected="$(strip_frontmatter "$SRC/$f" | sed 's/\.mdc/\.md/g')"
       local actual
       actual="$(cat "$dest/$md_name")"
       if [[ "$expected" != "$actual" ]]; then
@@ -323,6 +355,8 @@ validate_target() {
 }
 
 # --- Local-only mode (generate in this repo) ---
+
+safe_backup_count=0
 
 if $LOCAL_ONLY; then
   if [[ "$FORMAT" == "cursor" ]]; then
@@ -418,6 +452,22 @@ sync_repo() {
     else
       sync_claude_to "$claude_dest"
       if ! $DRY_RUN; then echo "Synced ($label) → $repo_root"; fi
+
+      # Migration: remove legacy claude/rules/ (no dot) in target repos only
+      local legacy_dir="$repo_root/claude/rules"
+      if [ -d "$legacy_dir" ] && [[ "$repo_root" != "$PLAYBOOK_ROOT" ]]; then
+        echo "  ⚠ Legacy claude/rules/ found — backed up and removed (rules now at .claude/rules/)"
+        if $SAFE_MODE; then
+          local bak_dir="$repo_root/claude/rules.v1.0.bak"
+          cp -R "$legacy_dir" "$bak_dir"
+        fi
+        rm -rf "$legacy_dir"
+      fi
+
+      # Warn if .claude/rules/ is gitignored
+      if git -C "$repo_root" check-ignore -q ".claude/rules/test.md" 2>/dev/null; then
+        echo "  ⚠ .claude/rules/ appears to be gitignored — rules won't be committed"
+      fi
     fi
   fi
   return 0

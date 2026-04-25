@@ -154,17 +154,48 @@ fi
 if [ -d "$claude_rules" ]; then
   has_claude=true
   md_count=$(ls -1 "$claude_rules/"*.md 2>/dev/null | wc -l | tr -d ' ')
-  if [ "$md_count" -gt 0 ]; then
-    check_pass "Claude rules: $md_count files present"
-  else
+  if [ "$md_count" -eq 0 ]; then
     check_fail "Claude rules directory exists but is empty" "$PLAYBOOK_ROOT/scripts/sync-rules.sh --format claude"
     rules_stale=1
+  else
+    claude_src="$PLAYBOOK_ROOT/claude/rules"
+    claude_src_count=$(ls -1 "$claude_src/"*.md 2>/dev/null | wc -l | tr -d ' ')
+    if [ "$md_count" -eq "$claude_src_count" ]; then
+      claude_stale=0
+      for f in "$claude_src/"*.md; do
+        base="$(basename "$f")"
+        if [ -f "$claude_rules/$base" ]; then
+          if ! diff -q "$f" "$claude_rules/$base" > /dev/null 2>&1; then
+            claude_stale=$((claude_stale + 1))
+          fi
+        else
+          claude_stale=$((claude_stale + 1))
+        fi
+      done
+      if [ $claude_stale -eq 0 ]; then
+        check_pass "Claude rules: $md_count files, all up to date"
+      else
+        check_fail "Claude rules: $claude_stale of $md_count are stale" "$PLAYBOOK_ROOT/scripts/sync-rules.sh --format claude"
+        rules_stale=1
+      fi
+    else
+      check_fail "Claude rules: $md_count files (expected $claude_src_count)" "$PLAYBOOK_ROOT/scripts/sync-rules.sh --format claude"
+      rules_stale=1
+    fi
   fi
 fi
 
 if ! $has_cursor && ! $has_claude; then
   check_fail "No rules found (neither .cursor/rules/ nor .claude/rules/)" "bash $PLAYBOOK_ROOT/scripts/playbook-init.sh"
   bootstrap_missing=1
+fi
+
+# Warn if rules directories are gitignored
+if $has_claude && git -C "$PROJECT_ROOT" check-ignore -q ".claude/rules/test.md" 2>/dev/null; then
+  check_warn ".claude/rules/ appears to be gitignored — rules won't be committed"
+fi
+if $has_cursor && git -C "$PROJECT_ROOT" check-ignore -q ".cursor/rules/test.mdc" 2>/dev/null; then
+  check_warn ".cursor/rules/ appears to be gitignored — rules won't be committed"
 fi
 
 echo ""

@@ -40,6 +40,15 @@ EOF
   esac
 done
 
+# ---------- Concurrency lock (mkdir is atomic on all filesystems) ----------
+
+LOCKDIR="$PROJECT_ROOT/.playbook-init.lock"
+if ! mkdir "$LOCKDIR" 2>/dev/null; then
+  echo "Another playbook-init is running for this project. Exiting."
+  exit 1
+fi
+trap 'rmdir "$LOCKDIR" 2>/dev/null' EXIT
+
 echo "=== Playbook Init: $(basename "$PROJECT_ROOT") ==="
 echo ""
 
@@ -64,6 +73,14 @@ if ! command -v bd &>/dev/null; then
   errors=$((errors + 1))
 else
   echo "✓ bd $(bd --version 2>/dev/null || echo '(version unknown)')"
+fi
+
+if ! { [ -d "$PROJECT_ROOT/.git" ] || [ -f "$PROJECT_ROOT/.git" ]; }; then
+  echo "✗ Not a git repository: $PROJECT_ROOT"
+  echo "  Fix: Run from the root of a git repo, or run 'git init' first"
+  errors=$((errors + 1))
+else
+  echo "✓ Git repository detected"
 fi
 
 if [ ! -d "$PLAYBOOK_ROOT/cursor/rules" ]; then
@@ -135,17 +152,38 @@ if [[ "$TOOL" == "claude" || "$TOOL" == "both" ]]; then
   echo "✓ Copied $count Claude Code rules → .claude/rules/"
 fi
 
+# ---------- Copy hooks (Claude Code) ----------
+
+if [[ "$TOOL" == "claude" || "$TOOL" == "both" ]]; then
+  hooks_src="$PLAYBOOK_ROOT/.claude/hooks"
+  hooks_dest="$PROJECT_ROOT/.claude/hooks"
+  settings_src="$PLAYBOOK_ROOT/.claude/settings.json"
+  settings_dest="$PROJECT_ROOT/.claude/settings.json"
+
+  if [ -d "$hooks_src" ]; then
+    mkdir -p "$hooks_dest"
+    # Backup existing settings.json if present
+    if [ -f "$settings_dest" ]; then
+      command cp -f "$settings_dest" "${settings_dest}.bak"
+      echo "  ↳ backed up existing settings.json"
+    fi
+    command cp -f "$settings_src" "$settings_dest"
+    command cp -f "$hooks_src"/*.sh "$hooks_dest/"
+    chmod +x "$hooks_dest"/*.sh
+    hooks_count=$(ls -1 "$hooks_dest/"*.sh 2>/dev/null | wc -l | tr -d ' ')
+    echo "✓ Copied $hooks_count Claude Code hooks + settings.json → .claude/"
+  fi
+fi
+
 # ---------- Beads init ----------
 
 if [ -d "$PROJECT_ROOT/.beads" ] || [ -d "$PROJECT_ROOT/.dolt" ]; then
   echo "✓ Beads already initialized (skipping bd init)"
 else
   if $STEALTH; then
-    echo N | bd init --stealth 2>/dev/null
-    echo "✓ Beads initialized (stealth mode)"
+    BD_OUTPUT=$(echo N | bd init --stealth 2>&1) && echo "✓ Beads initialized (stealth mode)" || echo "  ✗ Beads init failed: $BD_OUTPUT"
   else
-    echo N | bd init 2>/dev/null
-    echo "✓ Beads initialized"
+    BD_OUTPUT=$(echo N | bd init 2>&1) && echo "✓ Beads initialized" || echo "  ✗ Beads init failed: $BD_OUTPUT"
   fi
 fi
 
@@ -157,16 +195,11 @@ fi
 
 # ---------- Scratchpad ----------
 
-scratchpad=""
-if [[ "$TOOL" == "cursor" || "$TOOL" == "both" ]]; then
-  scratchpad="$PROJECT_ROOT/.cursor/scratchpad.md"
-elif [[ "$TOOL" == "claude" ]]; then
-  scratchpad="$PROJECT_ROOT/scratchpad.md"
-fi
-
-if [ -n "$scratchpad" ] && [ ! -f "$scratchpad" ]; then
-  mkdir -p "$(dirname "$scratchpad")"
-  cat > "$scratchpad" <<'SCRATCHPAD'
+create_scratchpad() {
+  local sp="$1"
+  if [ ! -f "$sp" ]; then
+    mkdir -p "$(dirname "$sp")"
+    cat > "$sp" <<'SCRATCHPAD'
 # Agent Scratchpad
 
 ## Background and Motivation
@@ -181,9 +214,19 @@ if [ -n "$scratchpad" ] && [ ! -f "$scratchpad" ]; then
 
 ## Lessons
 SCRATCHPAD
-  echo "✓ Created scratchpad at $(basename "$(dirname "$scratchpad")")/$(basename "$scratchpad")"
-elif [ -n "$scratchpad" ] && [ -f "$scratchpad" ]; then
-  echo "✓ Scratchpad already exists (not overwriting)"
+    echo "✓ Created scratchpad at $(basename "$(dirname "$sp")")/$(basename "$sp")"
+  else
+    echo "✓ Scratchpad already exists at $(basename "$(dirname "$sp")")/$(basename "$sp") (not overwriting)"
+  fi
+}
+
+if [[ "$TOOL" == "both" ]]; then
+  create_scratchpad "$PROJECT_ROOT/.cursor/scratchpad.md"
+  create_scratchpad "$PROJECT_ROOT/scratchpad.md"
+elif [[ "$TOOL" == "cursor" ]]; then
+  create_scratchpad "$PROJECT_ROOT/.cursor/scratchpad.md"
+elif [[ "$TOOL" == "claude" ]]; then
+  create_scratchpad "$PROJECT_ROOT/scratchpad.md"
 fi
 
 # ---------- Governance ----------
@@ -292,6 +335,7 @@ echo ""
 echo "What's ready:"
 echo "  • $(ls -1 "$PROJECT_ROOT/.cursor/rules/"*.mdc 2>/dev/null | wc -l | tr -d ' ') Cursor rules" 2>/dev/null || true
 echo "  • $(ls -1 "$PROJECT_ROOT/.claude/rules/"*.md 2>/dev/null | wc -l | tr -d ' ') Claude rules" 2>/dev/null || true
+echo "  • $(ls -1 "$PROJECT_ROOT/.claude/hooks/"*.sh 2>/dev/null | wc -l | tr -d ' ') Claude hooks + settings.json" 2>/dev/null || true
 echo "  • Beads task tracking (bd list, bd ready, bd create)"
 echo "  • Scratchpad for cross-session context"
 [ -f "$coc_dest" ] && echo "  • Agentic Covenant (CODE_OF_CONDUCT.md)"
@@ -301,5 +345,6 @@ echo "  1. Open this project in your editor"
 echo '  2. Say "Planner mode" to break down a feature into tasks'
 echo '  3. Say "Executor mode" to start implementing'
 echo "  4. Run: bd prime (agent does this automatically at session start)"
+echo "  5. ⚠ Rules take effect on next session start — restart your editor/CLI"
 echo ""
 echo "Verify setup: bash $PLAYBOOK_ROOT/scripts/playbook-doctor.sh"

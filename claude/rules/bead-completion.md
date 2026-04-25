@@ -55,7 +55,7 @@ When an AC requires a manual step (rebuild, UI click, external system check, int
 
 The invariant: the close reason carries evidence for every AC, **or** the AC has been explicitly moved to a follow-up bead that exists at close time. "Later" is not an acceptable close state.
 
-See `beads-quality.mdc` for close reason format and examples.
+See `beads-quality.md` for close reason format and examples.
 
 ## After closing — workflow continuation
 

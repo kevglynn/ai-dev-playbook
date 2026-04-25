@@ -14,7 +14,13 @@ Setup takes under 5 minutes. Choose your path below.
    brew install beads
    ```
 
+   **Supported shells:** bash and zsh. Fish users: aliases from `install-aliases.sh` are not supported; use the full script paths instead.
+
+   **Non-Homebrew install:** See the [beads repository](https://github.com/steveyegge/beads) for alternative install methods.
+
 ## One-time machine setup (recommended first step)
+
+**Why this matters:** Per-repo rules only apply in bootstrapped projects. Without the safety net, an agent opening a fresh repo has zero knowledge the playbook exists — it can't bootstrap what it doesn't know about. The safety net solves this by injecting a minimal bootstrap prompt into your machine-wide `~/CLAUDE.md` (and Cursor user rules). It's a one-time install that ensures every repo gets at least a "would you like to bootstrap?" prompt.
 
 Two installers, run once per machine. Both are non-interactive and safe for agents to run on your behalf after asking — so you can literally tell Cursor or Claude Code to "install the ai-dev-playbook" and it will invoke these for you.
 

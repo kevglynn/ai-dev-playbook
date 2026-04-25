@@ -69,7 +69,7 @@ The **[Agentic Covenant](https://github.com/gastownhall/beads/blob/main/CODE_OF_
 
 ## How the rules reach you
 
-Today, the playbook rules are installed per-project via `playbook-init.sh` or `sync-rules.sh`. This works for both Cursor (`.mdc` files) and Claude Code (`.md` files).
+Today, the playbook rules are installed per-project via `playbook-init.sh` or `sync-rules.sh`. This works for both Cursor (`.mdc` files) and Claude Code (`.md` files). For Claude Code users, `playbook-init.sh` also distributes hooks (memory capture, auto-recall, subagent wrapup) and `settings.json` into `.claude/` — these automate the session lifecycle steps described in the operating-model rule.
 
 The integration roadmap:
 
@@ -111,7 +111,7 @@ For comparison, compound-engineering costs ~36K tokens and loads in full.
 
 ## Learn more
 
-- **[Core Concepts](concepts.md)** — The four components and how they work together
+- **[Core Concepts](concepts.md)** — The five components and how they work together
 - **[Quick Start](../QUICKSTART.md)** — Set up the playbook in under 5 minutes
 - **[FAQ](faq.md)** — Common questions from adopters
 - **[Glossary](glossary.md)** — Definitions for all terminology
