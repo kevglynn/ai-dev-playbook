@@ -125,26 +125,30 @@ if [ -d "$cursor_rules" ]; then
   has_cursor=true
   mdc_count=$(ls -1 "$cursor_rules/"*.mdc 2>/dev/null | wc -l | tr -d ' ')
   src_count=$(ls -1 "$PLAYBOOK_ROOT/cursor/rules/"*.mdc 2>/dev/null | wc -l | tr -d ' ')
-  if [ "$mdc_count" -eq "$src_count" ]; then
-    stale=0
-    for f in "$PLAYBOOK_ROOT/cursor/rules/"*.mdc; do
-      base="$(basename "$f")"
-      if [ -f "$cursor_rules/$base" ]; then
-        if ! diff -q "$f" "$cursor_rules/$base" > /dev/null 2>&1; then
-          stale=$((stale + 1))
-        fi
-      else
-        stale=$((stale + 1))
-      fi
-    done
-    if [ $stale -eq 0 ]; then
-      check_pass "Cursor rules: $mdc_count files, all up to date"
+  # Check that every canonical rule is present and current.
+  # Extra rules from other tools (e.g. Jawnt) are fine — only flag missing or stale.
+  stale=0
+  missing=0
+  for f in "$PLAYBOOK_ROOT/cursor/rules/"*.mdc; do
+    base="$(basename "$f")"
+    if [ ! -f "$cursor_rules/$base" ]; then
+      missing=$((missing + 1))
+    elif ! diff -q "$f" "$cursor_rules/$base" > /dev/null 2>&1; then
+      stale=$((stale + 1))
+    fi
+  done
+  if [ $missing -eq 0 ] && [ $stale -eq 0 ]; then
+    extra=$((mdc_count - src_count))
+    if [ "$extra" -gt 0 ]; then
+      check_pass "Cursor rules: $src_count playbook files up to date (+$extra from other tools)"
     else
-      check_fail "Cursor rules: $stale of $mdc_count are stale" "$PLAYBOOK_ROOT/scripts/sync-rules.sh --format cursor"
-      rules_stale=1
+      check_pass "Cursor rules: $mdc_count files, all up to date"
     fi
   else
-    check_fail "Cursor rules: $mdc_count files (expected $src_count)" "$PLAYBOOK_ROOT/scripts/sync-rules.sh --format cursor"
+    issues=""
+    [ $missing -gt 0 ] && issues="$missing missing"
+    [ $stale -gt 0 ] && { [ -n "$issues" ] && issues="$issues, "; issues="${issues}$stale stale"; }
+    check_fail "Cursor rules: $issues (of $src_count expected)" "$PLAYBOOK_ROOT/scripts/sync-rules.sh --format cursor"
     rules_stale=1
   fi
 else
@@ -190,12 +194,18 @@ if ! $has_cursor && ! $has_claude; then
   bootstrap_missing=1
 fi
 
-# Warn if rules directories are gitignored
-if $has_claude && git -C "$PROJECT_ROOT" check-ignore -q ".claude/rules/test.md" 2>/dev/null; then
-  check_warn ".claude/rules/ appears to be gitignored — rules won't be committed"
-fi
-if $has_cursor && git -C "$PROJECT_ROOT" check-ignore -q ".cursor/rules/test.mdc" 2>/dev/null; then
-  check_warn ".cursor/rules/ appears to be gitignored — rules won't be committed"
+# Warn if rules directories are gitignored (skip for the playbook repo itself,
+# where .cursor/* is intentionally gitignored since cursor/rules/ is the source)
+is_playbook_repo=false
+[[ "$(cd "$PROJECT_ROOT" && pwd)" == "$(cd "$PLAYBOOK_ROOT" && pwd)" ]] && is_playbook_repo=true
+
+if ! $is_playbook_repo; then
+  if $has_claude && git -C "$PROJECT_ROOT" check-ignore -q ".claude/rules/test.md" 2>/dev/null; then
+    check_warn ".claude/rules/ appears to be gitignored — rules won't be committed"
+  fi
+  if $has_cursor && git -C "$PROJECT_ROOT" check-ignore -q ".cursor/rules/test.mdc" 2>/dev/null; then
+    check_warn ".cursor/rules/ appears to be gitignored — rules won't be committed"
+  fi
 fi
 
 echo ""
