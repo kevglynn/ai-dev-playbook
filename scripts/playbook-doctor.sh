@@ -332,8 +332,7 @@ echo "Worktree support:"
 if [ -f "$PROJECT_ROOT/.cursor/worktrees.json" ]; then
   check_pass "Worktree hook present (.cursor/worktrees.json)"
 else
-  wt_count=$(git -C "$PROJECT_ROOT" worktree list --porcelain 2>/dev/null | grep -c '^worktree ')
-  [ -z "$wt_count" ] && wt_count=0
+  wt_count=$(git -C "$PROJECT_ROOT" worktree list --porcelain 2>/dev/null | grep -c '^worktree ' || echo "0")
   if [ "$wt_count" -gt 1 ]; then
     check_warn "Repo has $wt_count worktrees but no .cursor/worktrees.json hook"
   else
