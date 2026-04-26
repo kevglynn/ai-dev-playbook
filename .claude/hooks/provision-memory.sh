@@ -37,14 +37,22 @@ provision_memory_dir() {
   fi
 
   # Setup .gitattributes for union merge (per-directory, scoped to .beads/memory/)
+  # Atomic write: stage to mktemp, then mv. A SIGKILL/OOM mid-write would
+  # otherwise leave .gitattributes half-written, and the next run's
+  # `grep -q 'knowledge.jsonl'` idempotency check would falsely report
+  # "already provisioned" without repairing the partial file. Same pattern
+  # as install-aliases.sh and playbook-init.sh (introduced in v1.1.0).
   local GITATTR="$MEMORY_DIR/.gitattributes"
 
-  if [[ ! -f "$GITATTR" ]]; then
-    echo "knowledge.jsonl merge=union" > "$GITATTR"
-    echo "knowledge.archive.jsonl merge=union" >> "$GITATTR"
-  elif ! grep -q 'knowledge.jsonl' "$GITATTR" 2>/dev/null; then
-    echo "knowledge.jsonl merge=union" >> "$GITATTR"
-    echo "knowledge.archive.jsonl merge=union" >> "$GITATTR"
+  if [[ ! -f "$GITATTR" ]] || ! grep -q 'knowledge.jsonl' "$GITATTR" 2>/dev/null; then
+    local GITATTR_TMP
+    GITATTR_TMP="$(mktemp "${GITATTR}.tmp.XXXXXX")"
+    {
+      [[ -f "$GITATTR" ]] && cat "$GITATTR"
+      echo "knowledge.jsonl merge=union"
+      echo "knowledge.archive.jsonl merge=union"
+    } > "$GITATTR_TMP"
+    mv "$GITATTR_TMP" "$GITATTR"
   fi
 
   # Write installed version for staleness detection by auto-recall.sh
