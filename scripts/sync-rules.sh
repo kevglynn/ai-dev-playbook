@@ -26,7 +26,10 @@ FORMAT="cursor"
 CHECK_MODE=false
 LOCAL_ONLY=false
 DRY_RUN=false
-SAFE_MODE=false
+# SAFE_MODE defaults to true: any locally modified target file is backed
+# up as .bak before being overwritten. Pass --unsafe to allow silent
+# overwrite (rarely correct; kept for parity with prior behavior).
+SAFE_MODE=true
 PIN_VERSION=""
 USE_VERSIONED_SRC=false
 
@@ -36,7 +39,38 @@ while [[ $# -gt 0 ]]; do
     --check)   CHECK_MODE=true; shift ;;
     --local)   LOCAL_ONLY=true; shift ;;
     --dry-run) DRY_RUN=true; shift ;;
-    --safe)    SAFE_MODE=true; shift ;;
+    --unsafe)  SAFE_MODE=false; shift ;;
+    --prune)
+      prune_file="$HOME/.playbook-sync-targets"
+      if [ ! -f "$prune_file" ]; then
+        echo "No ~/.playbook-sync-targets file found."
+        exit 1
+      fi
+      pruned=0
+      cleaned=""
+      while IFS= read -r line || [ -n "$line" ]; do
+        raw="$line"
+        expanded="${line/#\~/$HOME}"
+        # Preserve comments and blank lines
+        if [[ "$raw" =~ ^[[:space:]]*# ]] || [[ -z "${raw// /}" ]]; then
+          cleaned+="$raw"$'\n'
+          continue
+        fi
+        if [ -d "$expanded" ]; then
+          cleaned+="$raw"$'\n'
+        else
+          echo "  Removed: $raw (path does not exist)"
+          pruned=$((pruned + 1))
+        fi
+      done < "$prune_file"
+      printf '%s' "$cleaned" > "$prune_file"
+      if [ $pruned -eq 0 ]; then
+        echo "All targets exist. Nothing to prune."
+      else
+        echo "Pruned $pruned stale target(s) from ~/.playbook-sync-targets."
+      fi
+      exit 0
+      ;;
     --version) PIN_VERSION="$2"; shift 2 ;;
     --show-version)
       if [ -f "$PLAYBOOK_ROOT/VERSION" ]; then
@@ -53,12 +87,18 @@ Multi-format rule sync from ai-dev-playbook to target repos.
 Usage: sync-rules.sh [options]
 
 Options:
-  --format cursor|claude|all   Output format (default: cursor)
+  --format cursor|claude|all   Output format (default: cursor; "both" is
+                               accepted as an alias for "all" — playbook-init.sh
+                               uses --tool both for the same concept)
   --check                      Report drift without syncing
   --local                      Generate in this repo only (claude/all)
   --dry-run                    Preview what would be written
-  --safe                       Back up locally modified files before overwriting
+  --unsafe                     Disable safe-mode backups (silent overwrite).
+                               Default is ON: locally modified files are
+                               backed up to .<ts>.bak before being
+                               overwritten.
   --version TAG                Sync rules from a specific git tag (e.g. v1.0.0)
+  --prune                      Remove stale (non-existent) paths from sync targets
   --show-version               Print current playbook version and exit
   --help                       Show this help
 
@@ -71,12 +111,19 @@ Versioning:
 EOF
       exit 0
       ;;
-    *) echo "Unknown option: $1 (use --help)"; exit 1 ;;
+    *) echo "Unknown option: $1 (use --help)" >&2; exit 1 ;;
   esac
 done
 
+# Accept "both" as an alias for "all" — playbook-init.sh uses --tool both
+# for the same concept and cross-script muscle memory shouldn't silently
+# fail. See agent-protocol.md for the contract.
+if [[ "$FORMAT" == "both" ]]; then
+  FORMAT="all"
+fi
+
 if [[ "$FORMAT" != "cursor" && "$FORMAT" != "claude" && "$FORMAT" != "all" ]]; then
-  echo "Unknown format: $FORMAT (expected cursor, claude, or all)"
+  echo "Unknown format: $FORMAT (expected cursor, claude, all, or both)" >&2
   exit 1
 fi
 
@@ -213,7 +260,11 @@ safe_backup() {
   local src_file="$1" dest_file="$2"
   if $SAFE_MODE && [ -f "$dest_file" ]; then
     if ! diff -q "$src_file" "$dest_file" > /dev/null 2>&1; then
-      local bak="${dest_file}.bak"
+      # Timestamped .bak so two consecutive safe-mode syncs with local edits
+      # between them don't silently destroy the user's first backup.
+      local ts bak
+      ts="$(date +%Y%m%d%H%M%S)"
+      bak="${dest_file}.${ts}.bak"
       cp "$dest_file" "$bak"
       echo "    ↳ backed up $(basename "$dest_file") → $(basename "$bak")"
       safe_backup_count=$((safe_backup_count + 1))
@@ -246,16 +297,20 @@ sync_claude_to() {
     local md_name="${f%.mdc}.md"
     if $SAFE_MODE && [ -f "$dest/$md_name" ]; then
       local expected
-      expected="$(strip_frontmatter "$SRC/$f")"
+      expected="$(strip_frontmatter "$SRC/$f" | sed 's/\.mdc/\.md/g')"
       local actual
       actual="$(cat "$dest/$md_name")"
       if [[ "$expected" != "$actual" ]]; then
-        cp "$dest/$md_name" "$dest/${md_name}.bak"
-        echo "    ↳ backed up $md_name → ${md_name}.bak"
+        # Timestamped .bak (see safe_backup() rationale).
+        local ts bak_name
+        ts="$(date +%Y%m%d%H%M%S)"
+        bak_name="${md_name}.${ts}.bak"
+        cp "$dest/$md_name" "$dest/$bak_name"
+        echo "    ↳ backed up $md_name → $bak_name"
         safe_backup_count=$((safe_backup_count + 1))
       fi
     fi
-    strip_frontmatter "$SRC/$f" > "$dest/$md_name"
+    strip_frontmatter "$SRC/$f" | sed 's/\.mdc/\.md/g' > "$dest/$md_name"
   done
   cleanup_stale_claude "$dest"
 }
@@ -288,7 +343,7 @@ check_claude_in() {
       stale=1
     else
       local expected
-      expected="$(strip_frontmatter "$SRC/$f")"
+      expected="$(strip_frontmatter "$SRC/$f" | sed 's/\.mdc/\.md/g')"
       local actual
       actual="$(cat "$dest/$md_name")"
       if [[ "$expected" != "$actual" ]]; then
@@ -318,6 +373,8 @@ validate_target() {
 }
 
 # --- Local-only mode (generate in this repo) ---
+
+safe_backup_count=0
 
 if $LOCAL_ONLY; then
   if [[ "$FORMAT" == "cursor" ]]; then
@@ -406,13 +463,31 @@ sync_repo() {
       if ! $DRY_RUN; then echo "Synced ($label) → $repo_root"; fi
     fi
   elif [[ "$fmt" == "claude" ]]; then
-    local claude_dest="$repo_root/claude/rules"
+    local claude_dest="$repo_root/.claude/rules"
     if $CHECK_MODE; then
       echo "Checking ($label): $repo_root"
       check_claude_in "$claude_dest" || return 1
     else
       sync_claude_to "$claude_dest"
       if ! $DRY_RUN; then echo "Synced ($label) → $repo_root"; fi
+
+      # Migration: remove legacy claude/rules/ (no dot) in target repos only
+      local legacy_dir="$repo_root/claude/rules"
+      if [ -d "$legacy_dir" ] && [[ "$repo_root" != "$PLAYBOOK_ROOT" ]]; then
+        if $SAFE_MODE; then
+          echo "  ⚠ Legacy claude/rules/ found — backed up and removed (rules now at .claude/rules/)"
+          local bak_dir="$repo_root/claude/rules.v1.0.bak"
+          cp -R "$legacy_dir" "$bak_dir"
+        else
+          echo "  ⚠ Legacy claude/rules/ found — removed (rules now at .claude/rules/)"
+        fi
+        rm -rf "$legacy_dir"
+      fi
+
+      # Warn if .claude/rules/ is gitignored
+      if git -C "$repo_root" check-ignore -q ".claude/rules/test.md" 2>/dev/null; then
+        echo "  ⚠ .claude/rules/ appears to be gitignored — rules won't be committed"
+      fi
     fi
   fi
   return 0

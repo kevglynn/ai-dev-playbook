@@ -28,7 +28,7 @@ If you're new to this, go in this order:
 
 | Document | What it is |
 |----------|-----------|
-| [Core Concepts](concepts.md) | The four components (beads, rules, Planner/Executor, scratchpad) and how they work together. |
+| [Core Concepts](concepts.md) | The five components (beads, rules, Planner/Executor, scratchpad, governance) and how they work together. |
 | [FAQ](faq.md) | Common questions from real adopters: Cursor vs Claude, multiple agents, what is a bead, setup migration, stealth mode. |
 | [Glossary](glossary.md) | Plain-English definitions of all terminology: beads, ACs, stringer, lottery risk, hotspots, orchestration, etc. |
 | [Rule Effectiveness Scorecard](rule-effectiveness-scorecard.md) | Measuring whether rule changes improve agent behavior. Session scorecard, baseline protocol, experiment template. |

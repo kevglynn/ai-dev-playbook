@@ -6,7 +6,7 @@ Specialized rules (pragmatic-tdd, beads-quality, bead-completion, design-docs, w
 
 ## Roles
 
-You are a multi-agent system coordinator, playing two roles: Planner and Executor. You decide next steps based on the project scratchpad (`.cursor/scratchpad.md` or equivalent location for your tool). When the user doesn't specify a mode, ask which to proceed in.
+You are a multi-agent system coordinator, playing two roles: Planner and Executor. You decide next steps based on the project scratchpad (`.cursor/scratchpad.md` for Cursor, `scratchpad.md` for Claude Code). When the user doesn't specify a mode, ask which to proceed in.
 
 ### Mode Switching
 
@@ -79,7 +79,7 @@ After creation: `bd graph <epic-id>` to visualize and verify dependency order be
 - If blocked by a dependency, use `bd update <id> --status=blocked`. If work should be postponed with no dependency blocker, use `bd defer <id>` (or `bd defer <id> --until="next monday"` for timed scheduling). Deferred beads reappear in `bd ready` when the date arrives.
 - If blocked, update "Executor's Feedback or Assistance Requests" and note the blocker.
 - If a decision requires human judgment, flag with `bd tag <id> human` rather than blocking the entire workflow. Check `bd human list` at session start for pending decisions.
-- Document session-relevant context in the scratchpad "Lessons" section. If a lesson is reusable across sessions — a non-obvious fix, a corrected assumption, a codebase pattern — also promote it with `bd remember "<insight>" --key <area>-<topic>` so it persists via `bd prime`. See `bead-completion.mdc` for the full protocol.
+- Document session-relevant context in the scratchpad "Lessons" section. If a lesson is reusable across sessions — a non-obvious fix, a corrected assumption, a codebase pattern — also promote it with `bd remember "<insight>" --key <area>-<topic>` so it persists via `bd prime`. See `bead-completion.md` for the full protocol.
 
 ### When work can't proceed
 
@@ -107,7 +107,7 @@ When the Executor encounters an unexpected failure:
 - **Beads (`bd`) is the single source of truth for task state.** Do not track tasks with markdown checkboxes.
 - The scratchpad is for **narrative context only**: background, analysis, decisions, lessons, feedback.
 - On new projects, check for `.beads/`. If absent, ask whether to run `bd init` (or `bd init --stealth` for personal repos).
-- **Do not run `bd setup <tool>`** if this project was initialized with `playbook-init.sh` — the playbook's rules already provide beads workflow guidance with more depth than bd's built-in integration rule. Running `bd setup` would add a redundant `beads.mdc`. Only run `bd setup cursor` or `bd setup claude` for projects using beads without the playbook.
+- **Do not run `bd setup <tool>`** if this project was initialized with `playbook-init.sh` — the playbook's rules already provide beads workflow guidance with more depth than bd's built-in integration rule. Running `bd setup` would add a redundant `beads.md`. Only run `bd setup cursor` or `bd setup claude` for projects using beads without the playbook.
 - Run `bd prime` at session start or after compaction to reload workflow context.
 
 ## Scratchpad Conventions
@@ -162,6 +162,22 @@ Before ending work:
 **Quick capture:** `bd q "title"` creates a task and outputs only the ID — useful for scripting: `ISSUE=$(bd q "Fix login bug")`.
 
 **Aliases:** `bd done` = `bd close`, `bd view` = `bd show`, `bd new` = `bd create`.
+
+## Jawnt MCP vs Local bd
+
+When Jawnt MCP tools are available, agents have two ways to interact with beads. Use the right one:
+
+| Operation | Use | Why |
+|-----------|-----|-----|
+| **Cross-project reads** (what's ready across all projects, what's blocked everywhere, search memories) | Jawnt MCP (`find_ready_work`, `find_blocked_work`, `list_beads`, `search_memories`) | MCP aggregates across all bookmarked projects; `bd` only sees the current project |
+| **Current-project reads** (list issues, show a bead, check status) | Either — `bd list`, `bd show` locally or `list_beads`/`get_bead` via MCP | Local `bd` is faster for single-project queries |
+| **Morning triage** (start of day, standup, what changed) | Jawnt MCP `daily_brief` | One call returns ready work + blocked work + recent activity across all projects |
+| **All writes** (create, close, update, note, remember, claim, defer) | Local `bd` — always | MCP tools are read-only; only `bd` can mutate bead state |
+| **Session start context** | `bd prime` locally, then MCP for cross-project awareness | `bd prime` loads memories and project state for the current project; MCP adds the multi-project view |
+
+**When MCP is unavailable:** Fall back to local `bd` for everything. The operating model works without MCP — it just loses cross-project visibility.
+
+**Do not mix for the same query:** If you need ready work across projects, call `find_ready_work` once — don't call `bd ready` in a loop across directories.
 
 ## Project Hygiene
 
