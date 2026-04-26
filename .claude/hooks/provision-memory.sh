@@ -37,30 +37,62 @@ provision_memory_dir() {
   fi
 
   # Setup .gitattributes for union merge (per-directory, scoped to .beads/memory/)
+  # Atomic write: stage to mktemp, then mv. A SIGKILL/OOM mid-write would
+  # otherwise leave .gitattributes half-written, and the next run's
+  # `grep -q 'knowledge.jsonl'` idempotency check would falsely report
+  # "already provisioned" without repairing the partial file. Same pattern
+  # as install-aliases.sh and playbook-init.sh (introduced in v1.1.0).
   local GITATTR="$MEMORY_DIR/.gitattributes"
 
-  if [[ ! -f "$GITATTR" ]]; then
-    echo "knowledge.jsonl merge=union" > "$GITATTR"
-    echo "knowledge.archive.jsonl merge=union" >> "$GITATTR"
-  elif ! grep -q 'knowledge.jsonl' "$GITATTR" 2>/dev/null; then
-    echo "knowledge.jsonl merge=union" >> "$GITATTR"
-    echo "knowledge.archive.jsonl merge=union" >> "$GITATTR"
+  if [[ ! -f "$GITATTR" ]] || ! grep -q 'knowledge.jsonl' "$GITATTR" 2>/dev/null; then
+    local GITATTR_TMP
+    GITATTR_TMP="$(mktemp "${GITATTR}.tmp.XXXXXX")"
+    {
+      [[ -f "$GITATTR" ]] && cat "$GITATTR"
+      echo "knowledge.jsonl merge=union"
+      echo "knowledge.archive.jsonl merge=union"
+    } > "$GITATTR_TMP"
+    mv "$GITATTR_TMP" "$GITATTR"
   fi
 
-  # Write installed version for staleness detection by auto-recall.sh
-  echo "0.6.7" > "$MEMORY_DIR/.beads-compound-version"
+  # Write installed version for staleness detection by auto-recall.sh.
+  # Source single-source-of-truth from _version.sh distributed alongside
+  # the hooks; falls back to "unknown" if the file is missing (in which
+  # case auto-recall.sh will treat any project version as a mismatch and
+  # emit the update prompt — safe-fail behavior).
+  # shellcheck source=_version.sh
+  if [[ -f "$HOOKS_SOURCE_DIR/_version.sh" ]]; then
+    source "$HOOKS_SOURCE_DIR/_version.sh"
+  else
+    BEADS_COMPOUND_VERSION="unknown"
+  fi
+  # Atomic write: same rationale as the .gitattributes block above. A
+  # half-written .beads-compound-version (0 bytes after a SIGKILL between
+  # truncate and write) reads as empty, which auto-recall.sh interprets as
+  # a stale install and emits a spurious update prompt every session.
+  local VERSION_FILE="$MEMORY_DIR/.beads-compound-version"
+  local VERSION_TMP
+  VERSION_TMP="$(mktemp "${VERSION_FILE}.tmp.XXXXXX")"
+  echo "$BEADS_COMPOUND_VERSION" > "$VERSION_TMP"
+  mv "$VERSION_TMP" "$VERSION_FILE"
 
   # Create .beads/memory/.gitignore to ignore the SQLite FTS cache
   # (rebuilt from knowledge.jsonl on first use — no need to commit it)
+  # Atomic write: a half-written heredoc passes the existence check on
+  # the next run, so the partial .gitignore would persist indefinitely
+  # and the SQLite cache could end up committed.
   local MEMORY_GITIGNORE="$MEMORY_DIR/.gitignore"
   if [[ ! -f "$MEMORY_GITIGNORE" ]]; then
-    cat > "$MEMORY_GITIGNORE" << 'EOF'
+    local GITIGNORE_TMP
+    GITIGNORE_TMP="$(mktemp "${MEMORY_GITIGNORE}.tmp.XXXXXX")"
+    cat > "$GITIGNORE_TMP" << 'EOF'
 # SQLite FTS cache (rebuilt from knowledge.jsonl on first use)
 knowledge.db
 knowledge.db-journal
 knowledge.db-wal
 knowledge.db-shm
 EOF
+    mv "$GITIGNORE_TMP" "$MEMORY_GITIGNORE"
   fi
 
   # Check if project .gitignore contains a .beads/ pattern, which would cause
