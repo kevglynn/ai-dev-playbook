@@ -41,7 +41,7 @@ bash "${AI_DEV_PLAYBOOK:-$HOME/ai-dev-playbook}/scripts/playbook-doctor.sh"
 bash "${AI_DEV_PLAYBOOK:-$HOME/ai-dev-playbook}/scripts/playbook-doctor.sh" --agent
 ```
 
-Exit: `0`=ok, `2`=bootstrap_needed, `3`=rules_drift, `4`=playbook_outdated, `1`=error. See the `agent-protocol` block in `~/CLAUDE.md` for the full contract.
+Exit: `0`=ok, `2`=bootstrap_needed, `3`=rules_drift, `1`=error. The `rules_drift` SUMMARY line carries the format that needs remediation (`rules_drift_cursor` | `rules_drift_claude` | `rules_drift_both`). See the `agent-protocol` block in `~/CLAUDE.md` for the full contract.
 
 **Sync rules with upstream:**
 ```bash

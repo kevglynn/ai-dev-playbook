@@ -147,7 +147,16 @@ echo ""
 if [[ "$TOOL" == "cursor" || "$TOOL" == "both" ]]; then
   dest="$PROJECT_ROOT/.cursor/rules"
   mkdir -p "$dest"
-  cp "$PLAYBOOK_ROOT/cursor/rules/"*.mdc "$dest/"
+  # Guard cp explicitly: set -e + an empty source glob or read-only
+  # destination would otherwise abort the script mid-bootstrap with no
+  # diagnostic and a misleading "0 rules" summary.
+  if ! cp "$PLAYBOOK_ROOT/cursor/rules/"*.mdc "$dest/" 2>/tmp/playbook-init.cp.err; then
+    echo "✗ Failed to copy Cursor rules → $dest"
+    sed 's/^/    /' /tmp/playbook-init.cp.err 2>/dev/null
+    rm -f /tmp/playbook-init.cp.err
+    exit 1
+  fi
+  rm -f /tmp/playbook-init.cp.err
   count=$(ls -1 "$dest/"*.mdc 2>/dev/null | wc -l | tr -d ' ')
   echo "✓ Copied $count Cursor rules → .cursor/rules/"
 fi
@@ -155,7 +164,13 @@ fi
 if [[ "$TOOL" == "claude" || "$TOOL" == "both" ]]; then
   dest="$PROJECT_ROOT/.claude/rules"
   mkdir -p "$dest"
-  cp "$PLAYBOOK_ROOT/claude/rules/"*.md "$dest/"
+  if ! cp "$PLAYBOOK_ROOT/claude/rules/"*.md "$dest/" 2>/tmp/playbook-init.cp.err; then
+    echo "✗ Failed to copy Claude rules → $dest"
+    sed 's/^/    /' /tmp/playbook-init.cp.err 2>/dev/null
+    rm -f /tmp/playbook-init.cp.err
+    exit 1
+  fi
+  rm -f /tmp/playbook-init.cp.err
   count=$(ls -1 "$dest/"*.md 2>/dev/null | wc -l | tr -d ' ')
   echo "✓ Copied $count Claude Code rules → .claude/rules/"
 fi
@@ -175,8 +190,14 @@ if [[ "$TOOL" == "claude" || "$TOOL" == "both" ]]; then
       command cp -f "$settings_dest" "${settings_dest}.bak"
       echo "  ↳ backed up existing settings.json"
     fi
-    command cp -f "$settings_src" "$settings_dest"
-    command cp -f "$hooks_src"/*.sh "$hooks_dest/"
+    if ! command cp -f "$settings_src" "$settings_dest" 2>/tmp/playbook-init.cp.err \
+       || ! command cp -f "$hooks_src"/*.sh "$hooks_dest/" 2>>/tmp/playbook-init.cp.err; then
+      echo "✗ Failed to copy Claude hooks/settings.json → $hooks_dest"
+      sed 's/^/    /' /tmp/playbook-init.cp.err 2>/dev/null
+      rm -f /tmp/playbook-init.cp.err
+      exit 1
+    fi
+    rm -f /tmp/playbook-init.cp.err
     chmod +x "$hooks_dest"/*.sh
     hooks_count=$(ls -1 "$hooks_dest/"*.sh 2>/dev/null | wc -l | tr -d ' ')
     echo "✓ Copied $hooks_count Claude Code hooks + settings.json → .claude/"
@@ -288,7 +309,7 @@ bash "\${AI_DEV_PLAYBOOK:-\$HOME/ai-dev-playbook}/scripts/playbook-doctor.sh"
 bash "\${AI_DEV_PLAYBOOK:-\$HOME/ai-dev-playbook}/scripts/playbook-doctor.sh" --agent
 \`\`\`
 
-Exit: \`0\`=ok, \`2\`=bootstrap_needed, \`3\`=rules_drift, \`4\`=playbook_outdated, \`1\`=error. See the \`agent-protocol\` block in \`~/CLAUDE.md\` for the full contract.
+Exit: \`0\`=ok, \`2\`=bootstrap_needed, \`3\`=rules_drift, \`1\`=error. The \`rules_drift\` SUMMARY line carries the format that needs remediation (\`rules_drift_cursor\` | \`rules_drift_claude\` | \`rules_drift_both\`). See the \`agent-protocol\` block in \`~/CLAUDE.md\` for the full contract.
 
 **Sync rules with upstream:**
 \`\`\`bash
@@ -309,19 +330,28 @@ AGENTS_SECTION
 if [ -f "$agents_md" ] && grep -qF "$agents_begin" "$agents_md"; then
   echo "✓ AGENTS.md already contains the ai-dev-playbook section"
 elif [ -f "$agents_md" ]; then
+  # Atomic write: stage to mktemp, then mv. A partial multi-line append
+  # via { ... } >> would otherwise leave AGENTS.md with an orphan BEGIN
+  # marker — and the next-run idempotency check (grep -qF "$agents_begin")
+  # would falsely report "already present" without repairing the partial
+  # block.
+  agents_tmp="$(mktemp "${agents_md}.tmp.XXXXXX")"
   {
-    # Ensure a blank line between existing content and our appended block.
+    cat "$agents_md"
     [ -n "$(tail -c1 "$agents_md" 2>/dev/null)" ] && printf '\n'
     printf '\n'
     render_playbook_agents_section
-  } >> "$agents_md"
+  } > "$agents_tmp"
+  mv "$agents_tmp" "$agents_md"
   echo "✓ Appended ai-dev-playbook section to existing AGENTS.md"
 else
+  agents_tmp="$(mktemp "${agents_md}.tmp.XXXXXX")"
   {
     printf '# AGENTS.md\n\n'
     printf 'Any agent landing in this repo: start here.\n\n'
     render_playbook_agents_section
-  } > "$agents_md"
+  } > "$agents_tmp"
+  mv "$agents_tmp" "$agents_md"
   echo "✓ Created AGENTS.md with ai-dev-playbook section"
 fi
 

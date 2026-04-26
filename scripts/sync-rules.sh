@@ -39,7 +39,6 @@ while [[ $# -gt 0 ]]; do
     --check)   CHECK_MODE=true; shift ;;
     --local)   LOCAL_ONLY=true; shift ;;
     --dry-run) DRY_RUN=true; shift ;;
-    --safe)    SAFE_MODE=true; shift ;;
     --unsafe)  SAFE_MODE=false; shift ;;
     --prune)
       prune_file="$HOME/.playbook-sync-targets"
@@ -88,12 +87,16 @@ Multi-format rule sync from ai-dev-playbook to target repos.
 Usage: sync-rules.sh [options]
 
 Options:
-  --format cursor|claude|all   Output format (default: cursor)
+  --format cursor|claude|all   Output format (default: cursor; "both" is
+                               accepted as an alias for "all" — playbook-init.sh
+                               uses --tool both for the same concept)
   --check                      Report drift without syncing
   --local                      Generate in this repo only (claude/all)
   --dry-run                    Preview what would be written
-  --safe                       Back up locally modified files (default: ON)
-  --unsafe                     Disable safe-mode backups (silent overwrite)
+  --unsafe                     Disable safe-mode backups (silent overwrite).
+                               Default is ON: locally modified files are
+                               backed up to .<ts>.bak before being
+                               overwritten.
   --version TAG                Sync rules from a specific git tag (e.g. v1.0.0)
   --prune                      Remove stale (non-existent) paths from sync targets
   --show-version               Print current playbook version and exit
@@ -108,12 +111,19 @@ Versioning:
 EOF
       exit 0
       ;;
-    *) echo "Unknown option: $1 (use --help)"; exit 1 ;;
+    *) echo "Unknown option: $1 (use --help)" >&2; exit 1 ;;
   esac
 done
 
+# Accept "both" as an alias for "all" — playbook-init.sh uses --tool both
+# for the same concept and cross-script muscle memory shouldn't silently
+# fail. See agent-protocol.md for the contract.
+if [[ "$FORMAT" == "both" ]]; then
+  FORMAT="all"
+fi
+
 if [[ "$FORMAT" != "cursor" && "$FORMAT" != "claude" && "$FORMAT" != "all" ]]; then
-  echo "Unknown format: $FORMAT (expected cursor, claude, or all)"
+  echo "Unknown format: $FORMAT (expected cursor, claude, all, or both)" >&2
   exit 1
 fi
 
@@ -250,7 +260,11 @@ safe_backup() {
   local src_file="$1" dest_file="$2"
   if $SAFE_MODE && [ -f "$dest_file" ]; then
     if ! diff -q "$src_file" "$dest_file" > /dev/null 2>&1; then
-      local bak="${dest_file}.bak"
+      # Timestamped .bak so two consecutive safe-mode syncs with local edits
+      # between them don't silently destroy the user's first backup.
+      local ts bak
+      ts="$(date +%Y%m%d%H%M%S)"
+      bak="${dest_file}.${ts}.bak"
       cp "$dest_file" "$bak"
       echo "    ↳ backed up $(basename "$dest_file") → $(basename "$bak")"
       safe_backup_count=$((safe_backup_count + 1))
@@ -287,8 +301,12 @@ sync_claude_to() {
       local actual
       actual="$(cat "$dest/$md_name")"
       if [[ "$expected" != "$actual" ]]; then
-        cp "$dest/$md_name" "$dest/${md_name}.bak"
-        echo "    ↳ backed up $md_name → ${md_name}.bak"
+        # Timestamped .bak (see safe_backup() rationale).
+        local ts bak_name
+        ts="$(date +%Y%m%d%H%M%S)"
+        bak_name="${md_name}.${ts}.bak"
+        cp "$dest/$md_name" "$dest/$bak_name"
+        echo "    ↳ backed up $md_name → $bak_name"
         safe_backup_count=$((safe_backup_count + 1))
       fi
     fi

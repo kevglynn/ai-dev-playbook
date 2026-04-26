@@ -13,7 +13,6 @@
 #   kb_insert DB_PATH KEY TYPE CONTENT SOURCE TAGS_TEXT TS BEAD - Insert entry
 #   kb_search DB_PATH QUERY TOP_N - FTS5 search with BM25 ranking
 #   kb_sync DB_PATH MEMORY_DIR     - Incremental sync from JSONL + first-time beads import
-#   kb_backfill DB_PATH MEMORY_DIR - Alias for kb_sync (backward compat)
 #
 
 # Create knowledge.db with FTS5 schema if missing
@@ -250,9 +249,4 @@ _kb_sync_jsonl() {
 
     kb_insert "$DB_PATH" "$KEY" "$TYPE" "$CONTENT" "$SOURCE" "$TAGS_TEXT" "$TS" "$BEAD"
   done
-}
-
-# Backward-compatible alias
-kb_backfill() {
-  kb_sync "$@"
 }

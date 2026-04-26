@@ -18,8 +18,12 @@ set -uo pipefail
 #   0 = ok (no action needed)
 #   2 = bootstrap_needed (no rules in this repo)
 #   3 = rules_drift (rules present but stale vs playbook source)
-#   4 = playbook_outdated (reserved; not emitted in phase 1)
 #   1 = generic error / other failure
+#
+# SUMMARY keys (--agent mode) for rules_drift carry the format that needs
+# remediation: rules_drift_cursor, rules_drift_claude, rules_drift_both.
+# Agents must dispatch on the specific key, not the generic exit code, to
+# avoid running sync-rules.sh with the wrong --format.
 
 PLAYBOOK_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 AGENT_MODE=false
@@ -46,7 +50,8 @@ Checks:
 Flags:
   --agent   Emit a machine-consumable SUMMARY line and use structured
             exit codes (0=ok, 2=bootstrap_needed, 3=rules_drift,
-            4=playbook_outdated, 1=error).
+            1=error). The rules_drift SUMMARY carries the format
+            (rules_drift_cursor|rules_drift_claude|rules_drift_both).
   --help    Show this help.
 
 Exit codes (human mode): 0 = all pass, 1 = issues found.
@@ -87,8 +92,14 @@ warn=0
 # Agent-mode state: tracks the specific class of issue so SUMMARY can
 # select the most accurate remediation category. Priority on exit:
 # bootstrap_needed > rules_drift > error > ok.
+#
+# rules_drift is split per-format so the SUMMARY can map directly to the
+# correct sync-rules.sh --format flag. A flat rules_stale flag would
+# default the agent's remediation to --format cursor (sync-rules' default)
+# and create unwanted .cursor/rules/ files on Claude-only projects.
 bootstrap_missing=0
-rules_stale=0
+cursor_stale=0
+claude_stale=0
 
 check_pass() { echo "  ✓ $1"; pass=$((pass + 1)); }
 check_fail() { echo "  ✗ $1"; echo "    Fix: $2"; fail=$((fail + 1)); }
@@ -149,7 +160,7 @@ if [ -d "$cursor_rules" ]; then
     [ $missing -gt 0 ] && issues="$missing missing"
     [ $stale -gt 0 ] && { [ -n "$issues" ] && issues="$issues, "; issues="${issues}$stale stale"; }
     check_fail "Cursor rules: $issues (of $src_count expected)" "$PLAYBOOK_ROOT/scripts/sync-rules.sh --format cursor"
-    rules_stale=1
+    cursor_stale=1
   fi
 else
   check_warn "No Cursor rules (.cursor/rules/ not found)"
@@ -160,7 +171,7 @@ if [ -d "$claude_rules" ]; then
   md_count=$(ls -1 "$claude_rules/"*.md 2>/dev/null | wc -l | tr -d ' ')
   if [ "$md_count" -eq 0 ]; then
     check_fail "Claude rules directory exists but is empty" "$PLAYBOOK_ROOT/scripts/sync-rules.sh --format claude"
-    rules_stale=1
+    claude_stale=1
   else
     claude_src="$PLAYBOOK_ROOT/claude/rules"
     claude_src_count=$(ls -1 "$claude_src/"*.md 2>/dev/null | wc -l | tr -d ' ')
@@ -180,17 +191,16 @@ if [ -d "$claude_rules" ]; then
         check_pass "Claude rules: $md_count files, all up to date"
       else
         check_fail "Claude rules: $claude_stale of $md_count are stale" "$PLAYBOOK_ROOT/scripts/sync-rules.sh --format claude"
-        rules_stale=1
       fi
     else
       check_fail "Claude rules: $md_count files (expected $claude_src_count)" "$PLAYBOOK_ROOT/scripts/sync-rules.sh --format claude"
-      rules_stale=1
+      claude_stale=1
     fi
   fi
 fi
 
 if ! $has_cursor && ! $has_claude; then
-  check_fail "No rules found (neither .cursor/rules/ nor .claude/rules/)" "bash $PLAYBOOK_ROOT/scripts/playbook-init.sh"
+  check_fail "No rules found (neither .cursor/rules/ nor .claude/rules/)" "bash $PLAYBOOK_ROOT/scripts/playbook-init.sh --tool cursor|claude|both"
   bootstrap_missing=1
 fi
 
@@ -254,7 +264,7 @@ if [ -n "$scratchpad" ]; then
     check_warn "$missing_sections section(s) missing — see operating-model.mdc for the required titles"
   fi
 else
-  check_fail "No scratchpad found" "bash $PLAYBOOK_ROOT/scripts/playbook-init.sh (creates it automatically)"
+  check_fail "No scratchpad found" "bash $PLAYBOOK_ROOT/scripts/playbook-init.sh --tool cursor|claude|both (creates it automatically)"
 fi
 
 echo ""
@@ -300,19 +310,14 @@ installer="$PLAYBOOK_ROOT/scripts/install-global-safety-net.sh"
 if [ -x "$installer" ]; then
   status_output="$(bash "$installer" --check 2>&1)"
   status_code=$?
+  # The installer's --check always emits ✗/⚠ on nonzero exit, so the
+  # branching collapses to: ok / out-of-date / not-installed.
   if [ $status_code -eq 0 ]; then
     check_pass "Global agent-identity block installed in ~/CLAUDE.md"
+  elif printf '%s\n' "$status_output" | grep -qF "out of date"; then
+    check_warn "Global safety net present in ~/CLAUDE.md but out of date — re-run: bash $installer"
   else
-    # Scan ALL output lines — checking only the first line can give false positives
-    if printf '%s\n' "$status_output" | grep -qE '✗|⚠'; then
-      if printf '%s\n' "$status_output" | grep -qF "out of date"; then
-        check_warn "Global safety net present in ~/CLAUDE.md but out of date — re-run: bash $installer"
-      else
-        check_warn "Global safety net not installed — optional but recommended for new repos: bash $installer"
-      fi
-    else
-      check_warn "Global safety net not installed — optional but recommended for new repos: bash $installer"
-    fi
+    check_warn "Global safety net not installed — optional but recommended for new repos: bash $installer"
   fi
 else
   check_warn "Global safety net installer not found at $installer"
@@ -347,14 +352,28 @@ echo "=== Results: $pass passed, $fail failed, $warn warnings (of $total checks)
 # Priority: bootstrap_needed > rules_drift > error > ok. The SUMMARY line
 # is a stable contract; do not emit user-controlled paths or free-form
 # strings — only the fixed enum keys below.
+#
+# rules_drift is split tri-state so the agent contract maps directly to a
+# specific sync-rules.sh --format flag. Without this, an agent following
+# the agent-protocol's "bash sync-rules.sh" recommendation on a Claude-only
+# project would default to --format cursor (the script's default) and
+# silently create unwanted .cursor/rules/ files in the target.
 if $AGENT_MODE; then
   if [ $bootstrap_missing -eq 1 ]; then
     echo ""
     echo "SUMMARY: bootstrap_needed"
     exit 2
-  elif [ $rules_stale -eq 1 ]; then
+  elif [ $cursor_stale -eq 1 ] && [ $claude_stale -eq 1 ]; then
     echo ""
-    echo "SUMMARY: rules_drift"
+    echo "SUMMARY: rules_drift_both"
+    exit 3
+  elif [ $cursor_stale -eq 1 ]; then
+    echo ""
+    echo "SUMMARY: rules_drift_cursor"
+    exit 3
+  elif [ $claude_stale -eq 1 ]; then
+    echo ""
+    echo "SUMMARY: rules_drift_claude"
     exit 3
   elif [ $fail -gt 0 ]; then
     echo ""

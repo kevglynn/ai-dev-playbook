@@ -111,8 +111,18 @@ if command -v sqlite3 &>/dev/null; then
   fi
 fi
 
-# Atomic file operations with mkdir-based lock (macOS-compatible)
+# Atomic file operations with mkdir-based lock (macOS-compatible).
+# Sweep stale locks first so a SIGKILL/OOM-killed prior run doesn't
+# silently no-op every subsequent capture (the same age-based pattern
+# playbook-init.sh uses, with a 5-minute threshold appropriate for a
+# Claude Code hook that should never legitimately hold the lock that long).
 LOCKDIR="$KNOWLEDGE_FILE.lock"
+if [ -d "$LOCKDIR" ]; then
+  lock_age=$(( $(date +%s) - $(stat -f %m "$LOCKDIR" 2>/dev/null || stat -c %Y "$LOCKDIR" 2>/dev/null || echo 0) ))
+  if [ "$lock_age" -gt 300 ]; then
+    rmdir "$LOCKDIR" 2>/dev/null || rm -rf "$LOCKDIR"
+  fi
+fi
 if mkdir "$LOCKDIR" 2>/dev/null; then
   trap 'rmdir "$LOCKDIR" 2>/dev/null' EXIT
 

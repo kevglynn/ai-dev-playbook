@@ -17,5 +17,8 @@ Instead describe: **complexity** (dependencies, unknowns), **scope**
 — not "how long will this take?"
 
 If you catch drift mid-response, correct inline and continue. See
-`.cursor/rules/agent-identity.mdc` in `ai-dev-playbook` for the full rule
-(banned-token scan, review protocol, and edge cases).
+`.cursor/rules/agent-identity.mdc` (Cursor) or
+`.claude/rules/agent-identity.md` (Claude Code) in any
+ai-dev-playbook-bootstrapped project for the full rule (banned-token
+scan, review protocol, and edge cases). The canonical source is
+`cursor/rules/agent-identity.mdc` in the ai-dev-playbook repo itself.

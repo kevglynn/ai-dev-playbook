@@ -146,15 +146,26 @@ rc_has_block() {
 rc_append_block() {
   local rc="$1"
   mkdir -p "$(dirname "$rc")"
+  # Atomic write: stage the new content (existing rc + spacer + block) to
+  # a temp file in the same directory, then mv. A non-atomic group
+  # append (`{ ... } >> "$rc"`) is exposed to OOM kills and SIGKILL
+  # mid-write — the rc would be left with a syntactically broken shell
+  # block (breaking every new terminal) and the orphan BEGIN marker
+  # would make `rc_has_block` falsely report "already installed" on
+  # re-run, bypassing repair.
+  local tmp
+  tmp="$(mktemp "${rc}.tmp.XXXXXX")"
   {
     if [ -f "$rc" ]; then
+      cat "$rc"
       # Ensure trailing newline before appending
       [ -n "$(tail -c1 "$rc" 2>/dev/null)" ] && printf '\n'
       printf '\n'
     fi
     rc_block
     printf '\n'
-  } >> "$rc"
+  } > "$tmp"
+  mv "$tmp" "$rc"
 }
 
 rc_remove_block() {

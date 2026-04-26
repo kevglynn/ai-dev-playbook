@@ -81,7 +81,8 @@ For agent-consumable status (structured exit codes + `SUMMARY:` footer):
 
 ```bash
 bash ~/ai-dev-playbook/scripts/playbook-doctor.sh --agent
-# Exit: 0=ok, 2=bootstrap_needed, 3=rules_drift, 4=playbook_outdated, 1=error
+# Exit: 0=ok, 2=bootstrap_needed, 3=rules_drift, 1=error
+# On rules_drift, SUMMARY carries the format: rules_drift_cursor|rules_drift_claude|rules_drift_both
 ```
 
 Options:

@@ -251,12 +251,15 @@ EOF
 # --- Dispatch ---
 
 # Verify all source files exist before any mode runs.
+# Use exit 1 (generic error). Exit 2 is reserved for playbook-doctor.sh's
+# "bootstrap_needed" contract — agents dispatching on exit codes from
+# this script must not be misled into running playbook-init.sh.
 for id in "${BLOCKS[@]}"; do
   src="$(block_source_path "$id")"
   if [ ! -f "$src" ]; then
     echo "ERROR: block source missing for '$id' at $src" >&2
     echo "  Registry in this script lists '$id' but the file is absent." >&2
-    exit 2
+    exit 1
   fi
 done
 
