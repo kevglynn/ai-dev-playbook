@@ -55,8 +55,18 @@ provision_memory_dir() {
     mv "$GITATTR_TMP" "$GITATTR"
   fi
 
-  # Write installed version for staleness detection by auto-recall.sh
-  echo "0.6.7" > "$MEMORY_DIR/.beads-compound-version"
+  # Write installed version for staleness detection by auto-recall.sh.
+  # Source single-source-of-truth from _version.sh distributed alongside
+  # the hooks; falls back to "unknown" if the file is missing (in which
+  # case auto-recall.sh will treat any project version as a mismatch and
+  # emit the update prompt — safe-fail behavior).
+  # shellcheck source=_version.sh
+  if [[ -f "$HOOKS_SOURCE_DIR/_version.sh" ]]; then
+    source "$HOOKS_SOURCE_DIR/_version.sh"
+  else
+    BEADS_COMPOUND_VERSION="unknown"
+  fi
+  echo "$BEADS_COMPOUND_VERSION" > "$MEMORY_DIR/.beads-compound-version"
 
   # Create .beads/memory/.gitignore to ignore the SQLite FTS cache
   # (rebuilt from knowledge.jsonl on first use — no need to commit it)

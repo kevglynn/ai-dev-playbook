@@ -15,8 +15,10 @@
 # Resolve script directory early (works for both native plugin and manual install)
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-# Version of beads-compound that wrote this hook (updated by installer)
-BEADS_COMPOUND_VERSION="0.6.7"
+# Version of beads-compound. Single source of truth in _version.sh so
+# auto-recall.sh and provision-memory.sh stay in sync without manual edits.
+# shellcheck source=_version.sh
+source "$SCRIPT_DIR/_version.sh"
 
 # Exit silently if bd is not installed
 if ! command -v bd &>/dev/null; then
