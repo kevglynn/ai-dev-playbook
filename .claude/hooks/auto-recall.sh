@@ -139,9 +139,14 @@ fi
 
 # If we found relevant knowledge, output it
 if [[ -n "$RELEVANT_KNOWLEDGE" ]]; then
-  cat << EOF
-{"hookSpecificOutput":{"systemMessage":"## Relevant Knowledge from Memory\n\nBased on your current work context:\n\n$RELEVANT_KNOWLEDGE\n\n_Use \`.beads/memory/recall.sh \"keyword\"\` to search for more._"}}
-EOF
+  RECALL_MSG="## Relevant Knowledge from Memory
+
+Based on your current work context:
+
+${RELEVANT_KNOWLEDGE}
+
+_Use \`.beads/memory/recall.sh \"keyword\"\` to search for more._"
+  jq -cn --arg msg "$RECALL_MSG" '{hookSpecificOutput: {systemMessage: $msg}}'
 fi
 
 exit 0

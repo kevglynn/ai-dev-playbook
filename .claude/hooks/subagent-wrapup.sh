@@ -22,23 +22,22 @@ if [[ -n "$TRANSCRIPT_PATH" ]] && [[ -f "$TRANSCRIPT_PATH" ]]; then
 
   if [[ -n "$BEAD_ID" ]]; then
     # Subagent is working on a bead - prompt it to log learnings
-    cat << EOF
-{
-  "decision": "block",
-  "reason": "Before completing, please log what you learned to the bead using one or more of these formats:
+    read -r -d '' REASON <<'REASON_TEXT' || true
+Before completing, please log what you learned to the bead using one or more of these formats:
 
-bd comments add $BEAD_ID \"LEARNED: [key technical insight you discovered]\"
-bd comments add $BEAD_ID \"DECISION: [important choice you made and why]\"
-bd comments add $BEAD_ID \"FACT: [constraint, gotcha, or important detail]\"
-bd comments add $BEAD_ID \"PATTERN: [coding pattern or convention you followed]\"
-bd comments add $BEAD_ID \"INVESTIGATION: [root cause or how something works]\"
-bd comments add $BEAD_ID \"FAILED_APPROACH: [what you tried] — [why it didn't work]\"
+bd comments add BEAD_PLACEHOLDER "LEARNED: [key technical insight you discovered]"
+bd comments add BEAD_PLACEHOLDER "DECISION: [important choice you made and why]"
+bd comments add BEAD_PLACEHOLDER "FACT: [constraint, gotcha, or important detail]"
+bd comments add BEAD_PLACEHOLDER "PATTERN: [coding pattern or convention you followed]"
+bd comments add BEAD_PLACEHOLDER "INVESTIGATION: [root cause or how something works]"
+bd comments add BEAD_PLACEHOLDER "FAILED_APPROACH: [what you tried] -- [why it didn't work]"
 
 Log any approaches you tried and abandoned using FAILED_APPROACH. State what you tried and why it didn't work. Omit if none.
 
-After logging at least one insight, you may complete."
-}
-EOF
+After logging at least one insight, you may complete.
+REASON_TEXT
+    REASON="${REASON//BEAD_PLACEHOLDER/$BEAD_ID}"
+    jq -cn --arg decision "block" --arg reason "$REASON" '{decision: $decision, reason: $reason}'
     exit 0
   fi
 fi

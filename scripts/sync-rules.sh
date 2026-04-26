@@ -49,7 +49,7 @@ while [[ $# -gt 0 ]]; do
       fi
       pruned=0
       cleaned=""
-      while IFS= read -r line; do
+      while IFS= read -r line || [ -n "$line" ]; do
         raw="$line"
         expanded="${line/#\~/$HOME}"
         # Preserve comments and blank lines
@@ -456,10 +456,12 @@ sync_repo() {
       # Migration: remove legacy claude/rules/ (no dot) in target repos only
       local legacy_dir="$repo_root/claude/rules"
       if [ -d "$legacy_dir" ] && [[ "$repo_root" != "$PLAYBOOK_ROOT" ]]; then
-        echo "  ⚠ Legacy claude/rules/ found — backed up and removed (rules now at .claude/rules/)"
         if $SAFE_MODE; then
+          echo "  ⚠ Legacy claude/rules/ found — backed up and removed (rules now at .claude/rules/)"
           local bak_dir="$repo_root/claude/rules.v1.0.bak"
           cp -R "$legacy_dir" "$bak_dir"
+        else
+          echo "  ⚠ Legacy claude/rules/ found — removed (rules now at .claude/rules/)"
         fi
         rm -rf "$legacy_dir"
       fi

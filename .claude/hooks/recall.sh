@@ -136,7 +136,7 @@ fi
 
 if [[ "$USED_FTS5" = false ]]; then
   # Grep fallback
-  RESULTS=$(grep -i "$QUERY" $INPUT_FILES 2>/dev/null)
+  RESULTS=$(grep -ih "$QUERY" $INPUT_FILES 2>/dev/null)
 
   if [[ -n "$TYPE_FILTER" ]]; then
     RESULTS=$(echo "$RESULTS" | jq -r "select(.type == \"$TYPE_FILTER\")" 2>/dev/null)

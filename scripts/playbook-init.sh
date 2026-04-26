@@ -43,6 +43,14 @@ done
 # ---------- Concurrency lock (mkdir is atomic on all filesystems) ----------
 
 LOCKDIR="$PROJECT_ROOT/.playbook-init.lock"
+# Clean stale locks older than 10 minutes
+if [ -d "$LOCKDIR" ]; then
+  lock_age=$(( $(date +%s) - $(stat -f %m "$LOCKDIR" 2>/dev/null || stat -c %Y "$LOCKDIR" 2>/dev/null || echo 0) ))
+  if [ "$lock_age" -gt 600 ]; then
+    rmdir "$LOCKDIR" 2>/dev/null || rm -rf "$LOCKDIR"
+    echo "  Removed stale lock (age: ${lock_age}s)"
+  fi
+fi
 if ! mkdir "$LOCKDIR" 2>/dev/null; then
   echo "Another playbook-init is running for this project. Exiting."
   exit 1

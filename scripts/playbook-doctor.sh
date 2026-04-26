@@ -303,9 +303,13 @@ if [ -x "$installer" ]; then
   if [ $status_code -eq 0 ]; then
     check_pass "Global agent-identity block installed in ~/CLAUDE.md"
   else
-    first_line="$(printf '%s\n' "$status_output" | head -n 1)"
-    if printf '%s' "$first_line" | grep -qF "out of date"; then
-      check_warn "Global safety net present in ~/CLAUDE.md but out of date — re-run: bash $installer"
+    # Scan ALL output lines — checking only the first line can give false positives
+    if printf '%s\n' "$status_output" | grep -qE '✗|⚠'; then
+      if printf '%s\n' "$status_output" | grep -qF "out of date"; then
+        check_warn "Global safety net present in ~/CLAUDE.md but out of date — re-run: bash $installer"
+      else
+        check_warn "Global safety net not installed — optional but recommended for new repos: bash $installer"
+      fi
     else
       check_warn "Global safety net not installed — optional but recommended for new repos: bash $installer"
     fi

@@ -39,8 +39,11 @@ provision_memory_dir() {
   # Setup .gitattributes for union merge (per-directory, scoped to .beads/memory/)
   local GITATTR="$MEMORY_DIR/.gitattributes"
 
-  if [[ ! -f "$GITATTR" ]] || ! grep -q 'knowledge.jsonl' "$GITATTR" 2>/dev/null; then
+  if [[ ! -f "$GITATTR" ]]; then
     echo "knowledge.jsonl merge=union" > "$GITATTR"
+    echo "knowledge.archive.jsonl merge=union" >> "$GITATTR"
+  elif ! grep -q 'knowledge.jsonl' "$GITATTR" 2>/dev/null; then
+    echo "knowledge.jsonl merge=union" >> "$GITATTR"
     echo "knowledge.archive.jsonl merge=union" >> "$GITATTR"
   fi
 

@@ -111,22 +111,31 @@ if command -v sqlite3 &>/dev/null; then
   fi
 fi
 
-# Check for duplicate key before appending to JSONL
-if [[ -f "$KNOWLEDGE_FILE" ]] && grep -qF "\"key\":\"$KEY\"" "$KNOWLEDGE_FILE"; then
-  exit 0  # Skip duplicate
-fi
+# Atomic file operations with mkdir-based lock (macOS-compatible)
+LOCKDIR="$KNOWLEDGE_FILE.lock"
+if mkdir "$LOCKDIR" 2>/dev/null; then
+  trap 'rmdir "$LOCKDIR" 2>/dev/null' EXIT
 
-echo "$ENTRY" >> "$KNOWLEDGE_FILE"
+  # Check for duplicate key before appending to JSONL
+  if [[ -f "$KNOWLEDGE_FILE" ]] && grep -qF "\"key\":\"$KEY\"" "$KNOWLEDGE_FILE"; then
+    rmdir "$LOCKDIR" 2>/dev/null
+    exit 0  # Skip duplicate
+  fi
 
-# Rotation: archive oldest 2500 when file exceeds 5000 lines
-# High threshold avoids rewriting the file (which breaks merge=union)
-LINE_COUNT=$(wc -l < "$KNOWLEDGE_FILE" 2>/dev/null | tr -d ' ')
+  echo "$ENTRY" >> "$KNOWLEDGE_FILE"
 
-if [[ "$LINE_COUNT" -gt 5000 ]]; then
-  ARCHIVE_FILE="$MEMORY_DIR/knowledge.archive.jsonl"
-  head -2500 "$KNOWLEDGE_FILE" >> "$ARCHIVE_FILE"
-  tail -n +2501 "$KNOWLEDGE_FILE" > "$KNOWLEDGE_FILE.tmp"
-  mv "$KNOWLEDGE_FILE.tmp" "$KNOWLEDGE_FILE"
+  # Rotation: archive oldest 2500 when file exceeds 5000 lines
+  # High threshold avoids rewriting the file (which breaks merge=union)
+  LINE_COUNT=$(wc -l < "$KNOWLEDGE_FILE" 2>/dev/null | tr -d ' ')
+
+  if [[ "$LINE_COUNT" -gt 5000 ]]; then
+    ARCHIVE_FILE="$MEMORY_DIR/knowledge.archive.jsonl"
+    head -2500 "$KNOWLEDGE_FILE" >> "$ARCHIVE_FILE"
+    tail -n +2501 "$KNOWLEDGE_FILE" > "$KNOWLEDGE_FILE.tmp"
+    command mv -f "$KNOWLEDGE_FILE.tmp" "$KNOWLEDGE_FILE"
+  fi
+
+  rmdir "$LOCKDIR" 2>/dev/null
 fi
 
 exit 0
