@@ -4,7 +4,7 @@ This page explains how governance fits into the playbook — and why it's as imp
 
 ## The missing layer
 
-The playbook has always had four components: beads, Planner/Executor, rules, and scratchpad. These define **how agents work**. But they don't define **how the community building and using those rules should operate** — especially when that community includes both humans and AI agents.
+The playbook has five components: beads, Planner/Executor, rules, scratchpad, and governance. The first four define **how agents work**. Governance defines **how the community building and using those rules should operate** — especially when that community includes both humans and AI agents.
 
 Governance is the fifth component. It answers:
 
@@ -67,7 +67,7 @@ The playbook was already positioned as the "discipline layer" for AI-native deve
 
 This is the stack that other organizations are trying to figure out. Most are stuck at "tooling" (which LLM, which IDE plugin). Some have reached "onboarding" (how do we set up projects). Very few have "discipline" (how do agents actually work day-to-day). Almost none have "governance" (who is accountable when things go wrong).
 
-Having all four layers — with governance grounded in the Agentic Covenant — positions Pryon as a thought leader in this space, not just a practitioner.
+Having all five layers — with governance grounded in the Agentic Covenant — positions Pryon as a thought leader in this space, not just a practitioner.
 
 ## Adopting governance in your project
 
@@ -94,6 +94,6 @@ This aligns with the playbook's Planner/Executor model: the human (Planner) make
 ## Further reading
 
 - **[The Agentic Covenant](https://github.com/gastownhall/beads/blob/main/CODE_OF_CONDUCT.md)** — Full text (upstream at beads)
-- **[Core Concepts](concepts.md)** — The playbook's four (now five) components
+- **[Core Concepts](concepts.md)** — The five components and how they work together
 - **[Executive Summary](executive-summary.md)** — The org-level operating model
 - **[Ecosystem Integration](ecosystem-integration.md)** — How the four repos fit together

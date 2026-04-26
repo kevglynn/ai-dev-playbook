@@ -122,7 +122,7 @@ The playbook is built for people who work with code, but the workflow pattern �
 
 ## Learn more
 
-- **[Core Concepts](concepts.md)** — The four components and how they work together
+- **[Core Concepts](concepts.md)** — The five components and how they work together
 - **[Quick Start](../QUICKSTART.md)** — Set up in under 5 minutes
 - **[Onboarding Sandbox](../sandbox/)** — Learn the full workflow hands-on in 45 minutes
 - **[Glossary](glossary.md)** — Definitions for all terminology

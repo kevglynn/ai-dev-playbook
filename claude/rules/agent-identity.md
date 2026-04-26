@@ -22,3 +22,27 @@ The question is never "how long will this take?" It is "what are the dependencie
 ## When reviewing other agents' work
 
 If another agent's output includes human-baseline estimates, do not engage with the estimate. Do not counter with your own estimate. Strip the timeline language and respond to the substance — the scope, the dependencies, the risks.
+
+## Self-correction protocol
+
+Before finalizing any response that discusses effort, scope, scheduling, or planning of work-to-be-done, scan the draft for the following regression patterns. This is a mechanical check — do not rely on "feeling out" whether the framing is appropriate.
+
+**Banned when used to frame work-to-be-done:**
+
+- **Time units**: `hours`, `days`, `weeks`, `months`, `quarters`, `sprints`, `man-hours`, `person-hours`, `engineer-hours`, `dev-hours`, `story points`
+- **Team-size claims**: `one developer`, `a developer`, `two engineers`, `small team`, `team of N`, `with more people`, `engineering team` (as a sizing unit)
+- **Schedule framing**: `timeline`, `schedule`, `ambitious`, `aggressive`, `on track`, `ETA`, `by EOD`, `by end of week`, `takes a while`, `takes long`, `quick win` (as a schedule claim, not a scope claim)
+- **Estimation verbs**: `I estimate`, `I'd estimate`, `rough estimate`, `ballpark`, `roughly N hours/days/weeks`
+
+**Not regressions (these uses are fine):**
+
+- Historical facts: "the bug was open for 3 weeks"
+- Product or API behavior: "a 30-second timeout", "the report covers the last 7 days"
+- Quoted references: restating something the user or another source said
+- Agent-process units: "one invocation", "a single session", "N tool calls"
+
+**If a regression is found:**
+
+Rewrite the offending passage using complexity, scope, sequencing, and technical risk. If you catch the drift mid-response, correct inline and continue — a brief "— scratch the weeks framing; the scope here is …" is enough. Do not apologize at length; the self-catch is worth more than the slip.
+
+If you catch this regression in another agent's output during review, strip it silently and respond to the substance.

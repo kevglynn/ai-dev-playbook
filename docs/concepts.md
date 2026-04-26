@@ -11,7 +11,7 @@ AI coding assistants are powerful but unpredictable. Without structure, you get:
 - **Lost context**: every new session starts from zero — the agent doesn't remember what happened yesterday
 - **No accountability**: there's no record of what was planned, what was built, or whether it was done right
 
-The playbook solves these problems with four interlocking components.
+The playbook solves these problems with five interlocking components.
 
 ## The five components
 
@@ -62,7 +62,7 @@ The scratchpad has six standard sections (Background, Challenges, Task Breakdown
 
 ### 5. Governance — accountability for human-agent collaboration
 
-The four components above define **how agents work**. Governance defines **how the community of people building and using those rules should operate** — especially when AI agents are involved.
+The first four components above define **how agents work**. Governance defines **how the community of people building and using those rules should operate** — especially when AI agents are involved.
 
 The playbook adopts the **[Agentic Covenant](https://github.com/gastownhall/beads/blob/main/CODE_OF_CONDUCT.md)**, an open source Code of Conduct created by the beads project. Its core principles:
 
@@ -71,9 +71,19 @@ The playbook adopts the **[Agentic Covenant](https://github.com/gastownhall/bead
 - **Disclosure safe harbor**: transparency about AI involvement can never be used against a contributor
 - **Contributor protection**: if someone has an open PR, others must build on it — not rewrite it
 
-Governance is the layer that makes the other four components trustworthy at scale. Without it, a team of 50 developers running agents has no shared answer to "who is responsible when an agent breaks something?"
+Governance is the layer that makes the other components trustworthy at scale. Without it, a team of 50 developers running agents has no shared answer to "who is responsible when an agent breaks something?"
 
 See [docs/governance.md](governance.md) for the full governance guide.
+
+## Supporting infrastructure
+
+### Global safety net — bootstrap prompts for un-bootstrapped repos
+
+Per-repo rules only apply in bootstrapped projects. The global safety net solves the cold-start problem by installing per-machine rule blocks into `~/CLAUDE.md` (and Cursor user rules) that provide a minimal bootstrap prompt in any repo. When an agent opens a fresh repo with no playbook rules, the safety net asks: "would you like to bootstrap?" One-time install via `install-global-safety-net.sh`.
+
+### Claude Code hooks — automated session lifecycle
+
+Three hooks automate the session lifecycle described in the operating-model rule: **auto-recall** (`bd prime` at session start), **memory capture** (`bd remember` at session end), and **subagent wrapup** (ensures subagent findings flow back). Installed by `playbook-init.sh` for `--tool claude` or `--tool both`.
 
 ## How they work together
 

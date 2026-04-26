@@ -76,7 +76,7 @@ Yes. The same 8 rules exist in both formats:
 bash ~/ai-dev-playbook/scripts/playbook-init.sh --tool claude
 ```
 
-This copies the rules as `.md` files into `claude/rules/`. The content is identical — only the format differs (`.mdc` with YAML frontmatter for Cursor, plain `.md` for Claude Code). `sync-rules.sh --format claude` keeps them updated.
+This copies the rules as `.md` files into `.claude/rules/` (where Claude Code auto-discovers them). The content is identical — only the format differs (`.mdc` with YAML frontmatter for Cursor, plain `.md` for Claude Code). `sync-rules.sh --format claude` keeps them updated.
 
 ## Context and performance
 
@@ -90,9 +90,35 @@ For comparison, compound-engineering costs ~36K tokens (~18% of context) and loa
 
 The 8 rules are designed to stay at 8. They cover the workflow end-to-end: planning, quality, completion, TDD, design docs, worktrees, multi-agent review, and identity. New learnings get folded into existing rules rather than spawning new ones. The [rule effectiveness scorecard](rule-effectiveness-scorecard.md) measures whether each rule is earning its token cost.
 
+## Infrastructure
+
+### What's the global safety net?
+
+The global safety net is a set of per-machine rule blocks installed into `~/CLAUDE.md` (and a matching Cursor user-rules paste snippet) that provide bootstrap prompts in un-bootstrapped repos. Without it, an agent opening a fresh repo has no knowledge the playbook exists and can't bootstrap what it doesn't know about.
+
+The safety net includes three marker-delimited blocks: `agent-identity` (prevents human-baseline estimation), `session-start` (offers to bootstrap when no rules are detected), and `agent-protocol` (the contract for how agents respond to "use the playbook").
+
+Install once per machine with:
+
+```bash
+bash ~/ai-dev-playbook/scripts/install-global-safety-net.sh
+```
+
+Block source files live in `global-safety-net/`. `playbook-doctor.sh` reports their status as part of its normal output.
+
+### What are the Claude Code hooks?
+
+The playbook installs three Claude Code hooks (via `playbook-init.sh` for `--tool claude` or `--tool both`):
+
+- **Memory capture**: automatically captures reusable lessons at session end via `bd remember`
+- **Auto-recall**: runs `bd prime` at session start to reload memories and project state
+- **Subagent wrapup**: ensures subagent sessions contribute their findings back to the parent context
+
+Hook scripts live in `.claude/hooks/` and are configured via `.claude/settings.json`. Both are copied to target repos during init. The hooks are optional — the playbook workflow works without them, but they automate the session lifecycle steps described in the operating-model rule.
+
 ## Learn more
 
 - **[Ecosystem Integration](ecosystem-integration.md)** — How the three repos fit together
-- **[Core Concepts](concepts.md)** — The four components and how they work together
+- **[Core Concepts](concepts.md)** — The five components and how they work together
 - **[FAQ](faq.md)** — General playbook questions
 - **[Quick Start](../QUICKSTART.md)** — Set up in under 5 minutes
