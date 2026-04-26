@@ -66,19 +66,33 @@ provision_memory_dir() {
   else
     BEADS_COMPOUND_VERSION="unknown"
   fi
-  echo "$BEADS_COMPOUND_VERSION" > "$MEMORY_DIR/.beads-compound-version"
+  # Atomic write: same rationale as the .gitattributes block above. A
+  # half-written .beads-compound-version (0 bytes after a SIGKILL between
+  # truncate and write) reads as empty, which auto-recall.sh interprets as
+  # a stale install and emits a spurious update prompt every session.
+  local VERSION_FILE="$MEMORY_DIR/.beads-compound-version"
+  local VERSION_TMP
+  VERSION_TMP="$(mktemp "${VERSION_FILE}.tmp.XXXXXX")"
+  echo "$BEADS_COMPOUND_VERSION" > "$VERSION_TMP"
+  mv "$VERSION_TMP" "$VERSION_FILE"
 
   # Create .beads/memory/.gitignore to ignore the SQLite FTS cache
   # (rebuilt from knowledge.jsonl on first use — no need to commit it)
+  # Atomic write: a half-written heredoc passes the existence check on
+  # the next run, so the partial .gitignore would persist indefinitely
+  # and the SQLite cache could end up committed.
   local MEMORY_GITIGNORE="$MEMORY_DIR/.gitignore"
   if [[ ! -f "$MEMORY_GITIGNORE" ]]; then
-    cat > "$MEMORY_GITIGNORE" << 'EOF'
+    local GITIGNORE_TMP
+    GITIGNORE_TMP="$(mktemp "${MEMORY_GITIGNORE}.tmp.XXXXXX")"
+    cat > "$GITIGNORE_TMP" << 'EOF'
 # SQLite FTS cache (rebuilt from knowledge.jsonl on first use)
 knowledge.db
 knowledge.db-journal
 knowledge.db-wal
 knowledge.db-shm
 EOF
+    mv "$GITIGNORE_TMP" "$MEMORY_GITIGNORE"
   fi
 
   # Check if project .gitignore contains a .beads/ pattern, which would cause
