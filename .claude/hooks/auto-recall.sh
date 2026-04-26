@@ -15,10 +15,8 @@
 # Resolve script directory early (works for both native plugin and manual install)
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-# Version of beads-compound. Single source of truth in _version.sh so
-# auto-recall.sh and provision-memory.sh stay in sync without manual edits.
-# shellcheck source=_version.sh
-source "$SCRIPT_DIR/_version.sh"
+# Version of beads-compound that wrote this hook (updated by installer)
+BEADS_COMPOUND_VERSION="0.6.7"
 
 # Exit silently if bd is not installed
 if ! command -v bd &>/dev/null; then
@@ -64,15 +62,9 @@ VERSION_FILE="$MEMORY_DIR/.beads-compound-version"
 if [[ -f "$VERSION_FILE" ]]; then
   INSTALLED_VERSION=$(cat "$VERSION_FILE" | tr -d '[:space:]')
   if [[ "$INSTALLED_VERSION" != "$BEADS_COMPOUND_VERSION" ]]; then
-    jq -cn \
-      --arg installed "$INSTALLED_VERSION" \
-      --arg current "$BEADS_COMPOUND_VERSION" \
-      --arg pwd "$(pwd)" \
-      '{
-        hookSpecificOutput: {
-          systemMessage: "## beads-compound update available\n\nThis project has beads-compound **\($installed)** but the plugin is now **\($current)**. Re-run the installer to get the latest hooks and fixes:\n\n```\nbash /path/to/beads-compound-plugin/install.sh \($pwd)\n```"
-        }
-      }'
+    cat << EOF
+{"hookSpecificOutput":{"systemMessage":"## beads-compound update available\n\nThis project has beads-compound **$INSTALLED_VERSION** but the plugin is now **$BEADS_COMPOUND_VERSION**. Re-run the installer to get the latest hooks and fixes:\n\n\`\`\`\nbash /path/to/beads-compound-plugin/install.sh $(pwd)\n\`\`\`"}}
+EOF
     exit 0
   fi
 fi

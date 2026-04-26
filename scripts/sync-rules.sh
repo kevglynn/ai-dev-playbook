@@ -40,6 +40,37 @@ while [[ $# -gt 0 ]]; do
     --local)   LOCAL_ONLY=true; shift ;;
     --dry-run) DRY_RUN=true; shift ;;
     --unsafe)  SAFE_MODE=false; shift ;;
+    --prune)
+      prune_file="$HOME/.playbook-sync-targets"
+      if [ ! -f "$prune_file" ]; then
+        echo "No ~/.playbook-sync-targets file found."
+        exit 1
+      fi
+      pruned=0
+      cleaned=""
+      while IFS= read -r line || [ -n "$line" ]; do
+        raw="$line"
+        expanded="${line/#\~/$HOME}"
+        # Preserve comments and blank lines
+        if [[ "$raw" =~ ^[[:space:]]*# ]] || [[ -z "${raw// /}" ]]; then
+          cleaned+="$raw"$'\n'
+          continue
+        fi
+        if [ -d "$expanded" ]; then
+          cleaned+="$raw"$'\n'
+        else
+          echo "  Removed: $raw (path does not exist)"
+          pruned=$((pruned + 1))
+        fi
+      done < "$prune_file"
+      printf '%s' "$cleaned" > "$prune_file"
+      if [ $pruned -eq 0 ]; then
+        echo "All targets exist. Nothing to prune."
+      else
+        echo "Pruned $pruned stale target(s) from ~/.playbook-sync-targets."
+      fi
+      exit 0
+      ;;
     --version) PIN_VERSION="$2"; shift 2 ;;
     --show-version)
       if [ -f "$PLAYBOOK_ROOT/VERSION" ]; then
@@ -67,6 +98,7 @@ Options:
                                backed up to .<ts>.bak before being
                                overwritten.
   --version TAG                Sync rules from a specific git tag (e.g. v1.0.0)
+  --prune                      Remove stale (non-existent) paths from sync targets
   --show-version               Print current playbook version and exit
   --help                       Show this help
 
