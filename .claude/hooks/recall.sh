@@ -82,13 +82,14 @@ if [[ -n "$TOPIC_ID" ]]; then
   exit 0
 fi
 
-# Build input (optionally include archive)
-INPUT_FILES="$KNOWLEDGE_FILE"
-$INCLUDE_ARCHIVE && [[ -f "$ARCHIVE_FILE" ]] && INPUT_FILES="$ARCHIVE_FILE $KNOWLEDGE_FILE"
+# Build input (optionally include archive). Use an array so paths with
+# spaces or leading dashes survive expansion intact.
+INPUT_FILES=("$KNOWLEDGE_FILE")
+$INCLUDE_ARCHIVE && [[ -f "$ARCHIVE_FILE" ]] && INPUT_FILES=("$ARCHIVE_FILE" "$KNOWLEDGE_FILE")
 
 # Recent mode
 if [[ "$RECENT" -gt 0 ]]; then
-  cat $INPUT_FILES | tail -"$RECENT" | jq -r '"\(.type | ascii_upcase): \(.content)"' 2>/dev/null
+  cat -- "${INPUT_FILES[@]}" | tail -"$RECENT" | jq -r '"\(.type | ascii_upcase): \(.content)"' 2>/dev/null
   exit 0
 fi
 
@@ -136,7 +137,7 @@ fi
 
 if [[ "$USED_FTS5" = false ]]; then
   # Grep fallback
-  RESULTS=$(grep -ih "$QUERY" $INPUT_FILES 2>/dev/null)
+  RESULTS=$(grep -ih -- "$QUERY" "${INPUT_FILES[@]}" 2>/dev/null)
 
   if [[ -n "$TYPE_FILTER" ]]; then
     RESULTS=$(echo "$RESULTS" | jq -r "select(.type == \"$TYPE_FILTER\")" 2>/dev/null)
