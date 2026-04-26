@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2059
-set -euo pipefail
+set -uo pipefail
 
 # Multi-format rule sync from ai-dev-playbook (canonical source) to target
 # repos AND their git worktrees.
