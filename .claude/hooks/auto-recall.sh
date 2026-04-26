@@ -17,8 +17,17 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # Version of beads-compound. Single source of truth in _version.sh so
 # auto-recall.sh and provision-memory.sh stay in sync without manual edits.
+# Guarded source mirrors provision-memory.sh: if _version.sh is missing
+# (partial deployment, manual file copy, user-deleted helper), fall back
+# to "unknown" rather than leaving the variable empty. The downstream
+# version-mismatch prompt then renders "the plugin is now **unknown**"
+# instead of "**" — informative rather than visually broken.
 # shellcheck source=_version.sh
-source "$SCRIPT_DIR/_version.sh"
+if [[ -f "$SCRIPT_DIR/_version.sh" ]]; then
+  source "$SCRIPT_DIR/_version.sh"
+else
+  BEADS_COMPOUND_VERSION="unknown"
+fi
 
 # Exit silently if bd is not installed
 if ! command -v bd &>/dev/null; then
