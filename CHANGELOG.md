@@ -2,6 +2,32 @@
 
 All notable changes to the playbook rules and scripts. Format: date, affected files, what changed.
 
+## 2026-04-27
+
+### Beads v1.0.3 audit
+
+- **No upgrade required:** Homebrew and GitHub latest are `bd` 1.0.3 (tag 2026-04-24). Audit focused on remediation, rule updates, and script adoption.
+- **This repo:** Ran `bd doctor --fix --yes` (updated [.beads/.gitignore](.beads/.gitignore) and [.gitignore](.gitignore) per current bd templates; added `.beads-credential-key` to project root ignore). Ran `bd hooks install` for pre-commit / post-merge / pre-push (and related) shims.
+
+### Rules
+
+- **operating-model.mdc** (canonical in `cursor/rules/`, synced to `claude/rules/` and dogfood): Documented `bd ready --explain`; `bd ready` / `bd list` filtering with `--exclude-type` and `--exclude-label`; `bd ping` before `bd doctor --agent` in tool-failure recovery; per-milestone `bd prune --older-than 90d --dry-run` for long-lived repos.
+- **Not adopted (noted for maintainers):** `bd rules audit` / `bd rules compact` target ad-hoc Claude rule trees; this playbook keeps `sync-rules.sh` as the canonical path. `BD_JSON_ENVELOPE=1`, `bd batch`, and `bd gate create` remain optional — revisit when scripting or coordination patterns need them.
+
+### Scripts
+
+- **playbook-init.sh:** After beads init, runs `bd hooks install` by default (idempotent if hooks already present). New flag `--no-hooks` to skip. Help text and summary updated.
+- **playbook-doctor.sh:** Beads section runs `bd ping` before `bd list`; warns when recommended git hooks are missing (`bd hooks install`).
+
+### Docs
+
+- **QUICKSTART.md:** Documents default hook installation and `--no-hooks`.
+- **README.md:** `playbook-init.sh` row notes default `bd hooks install` and `--no-hooks`.
+
+### Upstream behavior (no playbook change needed)
+
+- **Dolt auto-push** is off by default in recent beads; session-close still uses explicit `bd dolt pull && bd dolt push` where a remote exists.
+
 ## 2026-04-23
 
 ### Rules

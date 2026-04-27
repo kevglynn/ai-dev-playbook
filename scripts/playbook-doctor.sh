@@ -41,7 +41,8 @@ Usage: playbook-doctor.sh [project-path] [--agent]
 Checks:
   • bd (beads) is on PATH
   • Agent rules are present and match the canonical source
-  • Beads is initialized (bd list works)
+  • Beads is initialized (bd ping + bd list)
+  • Beads git hooks recommended (pre-commit, post-merge, pre-push)
   • Scratchpad exists with correct sections
   • Project is in ~/.playbook-sync-targets
   • Worktree hook present (if repo has worktrees)
@@ -227,10 +228,23 @@ echo "Beads:"
 if [ -d "$PROJECT_ROOT/.beads" ] || [ -d "$PROJECT_ROOT/.dolt" ]; then
   check_pass "Beads directory exists"
   if command -v bd &>/dev/null; then
-    if bd list --status=open > /dev/null 2>&1; then
-      check_pass "bd list works (database healthy)"
+    if bd ping > /dev/null 2>&1; then
+      check_pass "bd ping ok (database reachable)"
+      if bd list --status=open > /dev/null 2>&1; then
+        check_pass "bd list works (database healthy)"
+      else
+        check_fail "bd list failed (database may be corrupted)" "bd doctor --agent"
+      fi
+      hooks_list_out=$(bd hooks list 2>/dev/null || true)
+      if echo "$hooks_list_out" | grep -q '✓ pre-commit' \
+        && echo "$hooks_list_out" | grep -q '✓ post-merge' \
+        && echo "$hooks_list_out" | grep -q '✓ pre-push'; then
+        check_pass "Beads git hooks: pre-commit, post-merge, pre-push installed"
+      else
+        check_warn "Beads git hooks missing or incomplete (bd recommends pre-commit, post-merge, pre-push)" "bd hooks install"
+      fi
     else
-      check_fail "bd list failed (database may be corrupted)" "bd doctor --agent"
+      check_fail "bd ping failed (database unreachable)" "bd doctor --agent"
     fi
   fi
 else

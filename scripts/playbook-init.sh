@@ -10,17 +10,20 @@ set -euo pipefail
 #   ./scripts/playbook-init.sh --tool claude       # Set up for Claude Code
 #   ./scripts/playbook-init.sh --tool both         # Set up for both tools
 #   ./scripts/playbook-init.sh --stealth           # Use bd init --stealth (personal repos)
+#   ./scripts/playbook-init.sh --no-hooks          # Skip bd hooks install (default: install)
 #   ./scripts/playbook-init.sh --help
 
 PLAYBOOK_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 TOOL=""
 STEALTH=false
+NO_HOOKS=false
 PROJECT_ROOT="$(pwd)"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --tool)    TOOL="$2"; shift 2 ;;
     --stealth) STEALTH=true; shift ;;
+    --no-hooks) NO_HOOKS=true; shift ;;
     --help|-h)
       cat <<'EOF'
 One-command project setup for the ai-dev-playbook.
@@ -30,6 +33,7 @@ Usage: playbook-init.sh [options]
 Options:
   --tool cursor|claude|both   Which tool to set up for (default: ask)
   --stealth                   Use bd init --stealth (for personal repos)
+  --no-hooks                  Skip bd hooks install (default: install beads git hooks)
   --help                      Show this help
 
 Run from the root of the project you want to set up.
@@ -222,6 +226,36 @@ fi
 # already provide beads workflow guidance with more depth than bd's built-in
 # integration rule. Running bd setup would add a redundant beads.mdc.
 
+# ---------- Beads git hooks (default-on) ----------
+#
+# Installs pre-commit / post-merge / pre-push (and related) shims so beads
+# auto-exports and syncs across clones. See: bd hooks --help
+
+HOOKS_INSTALLED=false
+if $NO_HOOKS; then
+  echo "✓ Skipping bd hooks install (--no-hooks)"
+elif ! command -v bd &>/dev/null; then
+  echo "  (bd not on PATH — skip bd hooks install)"
+elif [ ! -d "$PROJECT_ROOT/.beads" ] && [ ! -d "$PROJECT_ROOT/.dolt" ]; then
+  echo "  (no .beads — skip bd hooks install)"
+else
+  hooks_status=$(bd hooks list 2>/dev/null || true)
+  if echo "$hooks_status" | grep -q '✓ pre-commit' \
+    && echo "$hooks_status" | grep -q '✓ post-merge' \
+    && echo "$hooks_status" | grep -q '✓ pre-push'; then
+    echo "✓ Beads git hooks already installed (skipping bd hooks install)"
+    HOOKS_INSTALLED=true
+  elif BD_OUT=$(bd hooks install 2>&1); then
+    echo "$BD_OUT"
+    echo "✓ Installed beads git hooks"
+    HOOKS_INSTALLED=true
+  else
+    echo "  ⚠ bd hooks install failed:"
+    echo "$BD_OUT" | sed 's/^/    /'
+    echo "    Fix manually from repo root: bd hooks install"
+  fi
+fi
+
 # ---------- Scratchpad ----------
 
 create_scratchpad() {
@@ -375,6 +409,12 @@ echo "  • $(ls -1 "$PROJECT_ROOT/.cursor/rules/"*.mdc 2>/dev/null | wc -l | tr
 echo "  • $(ls -1 "$PROJECT_ROOT/.claude/rules/"*.md 2>/dev/null | wc -l | tr -d ' ') Claude rules" 2>/dev/null || true
 echo "  • $(ls -1 "$PROJECT_ROOT/.claude/hooks/"*.sh 2>/dev/null | wc -l | tr -d ' ') Claude hooks + settings.json" 2>/dev/null || true
 echo "  • Beads task tracking (bd list, bd ready, bd create)"
+if $HOOKS_INSTALLED; then
+  echo "  • Beads git hooks (bd hooks install — auto-export / sync on commit & push)"
+fi
+if $NO_HOOKS; then
+  echo "  • Beads git hooks skipped — run bd hooks install when ready"
+fi
 echo "  • Scratchpad for cross-session context"
 [ -f "$coc_dest" ] && echo "  • Agentic Covenant (CODE_OF_CONDUCT.md)"
 echo ""

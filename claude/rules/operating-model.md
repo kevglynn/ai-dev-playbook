@@ -98,7 +98,7 @@ After creation: `bd graph <epic-id>` to visualize and verify dependency order be
 When the Executor encounters an unexpected failure:
 
 1. **Build or test failure during implementation:** Stop, diagnose, fix. If the fix is outside the current bead's scope, create a new bead for it and mark the current bead blocked.
-2. **Tool failure** (`bd`, `git`, build tool): Check the error message. Run `bd doctor --agent` for beads issues. If the tool is fundamentally broken, note it in "Executor's Feedback" and mark the bead blocked.
+2. **Tool failure** (`bd`, `git`, build tool): Check the error message. For beads: run `bd ping` first — if it fails, the database is unreachable. If `bd ping` succeeds, run `bd doctor --agent` for full diagnostics. If the tool is fundamentally broken, note it in "Executor's Feedback" and mark the bead blocked.
 3. **Multiple failed approaches** (3+ distinct attempts): Stop implementing. Document what was tried and why each failed in `bd note <id> "..."`. Mark the bead blocked and escalate to the Planner — the approach or ACs may need revision.
 4. **Uncertain about correctness:** Do not ship code you're not confident in. Flag the uncertainty in "Executor's Feedback" with specific questions. It is better to ask than guess.
 
@@ -151,11 +151,14 @@ Before ending work:
 ## Finding and Filtering Beads
 
 - `bd ready` — blocker-aware ready work (the default starting point)
+- `bd ready --explain` — dependency-aware reasoning for why issues are ready or blocked
 - `bd list --status=open` — all open issues
 - `bd search "keyword"` — text search across titles and IDs
 - `bd query "status=open AND priority<=1 AND type=bug"` — structured query with AND/OR/NOT, parentheses, and date-relative expressions (e.g., `updated>7d`)
 - `bd blocked` — show all blocked issues
 - `bd count --by-status` — quick project metrics
+
+**Filtering:** `bd ready` and `bd list` accept `--exclude-type` and `--exclude-label` to omit issue types or labels from results (repeatable or comma-separated).
 
 **Machine-readable output:** `bd list` defaults to `--tree` (human-readable). When scripting or piping output, use `bd list --json` for JSON or `bd list --flat` for legacy flat format. Same applies to `bd ready --json`, `bd show <id> --json`, `bd blocked --json`.
 
@@ -193,6 +196,7 @@ When Jawnt MCP tools are available, agents have two ways to interact with beads.
 | Command | What it checks | Action on findings |
 |---------|---------------|-------------------|
 | `bd stale` | Beads with no activity for 7+ days | Defer, close as won't-do, or re-prioritize |
+| `bd prune --older-than 90d --dry-run` | Closed non-ephemeral beads older than a threshold (long-lived repos) | Preview bloat; use `--force` only after review — permanently deletes matching closed beads |
 | `bd orphans` | Beads referenced in commits but still open | Close with commit evidence, or update if incomplete |
 | `bd count --by-status` | Overall project health | Report to user if open count grows faster than closed |
 | `bd epic status <epic-id>` | Progress on the current epic | Note in scratchpad if approaching completion |

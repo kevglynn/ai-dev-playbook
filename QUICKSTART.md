@@ -67,8 +67,11 @@ The script will:
 - Ask which tool you use (Cursor, Claude Code, or both)
 - Copy the appropriate rules into your project
 - Initialize beads task tracking
+- Install **beads git hooks** (`bd hooks install`) so pre-commit / post-merge / pre-push keep `issues.jsonl` and the Dolt DB in sync across clones (see `bd hooks --help`)
 - Create a scratchpad for cross-session context
 - Register your project for rule sync updates
+
+**Opt out of hooks:** pass `--no-hooks` if you manage git hooks yourself or use a repo where hook installation is not allowed. You can run `bd hooks install` later from the project root.
 
 Verify everything is configured:
 
@@ -94,6 +97,9 @@ bash ~/ai-dev-playbook/scripts/playbook-init.sh --tool both
 
 # Personal repos (hides .beads from git)
 bash ~/ai-dev-playbook/scripts/playbook-init.sh --stealth
+
+# Skip beads git hooks (default is to install them)
+bash ~/ai-dev-playbook/scripts/playbook-init.sh --tool cursor --no-hooks
 ```
 
 `playbook-init.sh` refuses non-interactive invocation without `--tool` — this is a security gate against prompt-injected agents silently bootstrapping a repo.
