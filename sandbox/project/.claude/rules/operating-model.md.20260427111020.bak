@@ -1,13 +1,8 @@
----
-description: Planner/Executor operating model — role definitions, workflow, scratchpad conventions, and beads task tracking.
-alwaysApply: true
----
-
 # Operating Model
 
 ## Rule Hierarchy
 
-Specialized rules (pragmatic-tdd, beads-quality, bead-completion, design-docs, worktree-awareness, multi-agent-review, agent-identity, parallel-subagent-safety) are the source of truth for their domain. This rule defines the operating model (roles, workflow, conventions). If a conflict arises: project agent rules > specialized rules > this rule > repo docs (AGENTS.md, CLAUDE.md).
+Specialized rules (pragmatic-tdd, beads-quality, bead-completion, design-docs, worktree-awareness, multi-agent-review, agent-identity) are the source of truth for their domain. This rule defines the operating model (roles, workflow, conventions). If a conflict arises: project agent rules > specialized rules > this rule > repo docs (AGENTS.md, CLAUDE.md).
 
 ## Roles
 
@@ -84,7 +79,7 @@ After creation: `bd graph <epic-id>` to visualize and verify dependency order be
 - If blocked by a dependency, use `bd update <id> --status=blocked`. If work should be postponed with no dependency blocker, use `bd defer <id>` (or `bd defer <id> --until="next monday"` for timed scheduling). Deferred beads reappear in `bd ready` when the date arrives.
 - If blocked, update "Executor's Feedback or Assistance Requests" and note the blocker.
 - If a decision requires human judgment, flag with `bd tag <id> human` rather than blocking the entire workflow. Check `bd human list` at session start for pending decisions.
-- Document session-relevant context in the scratchpad "Lessons" section. If a lesson is reusable across sessions — a non-obvious fix, a corrected assumption, a codebase pattern — also promote it with `bd remember "<insight>" --key <area>-<topic>` so it persists via `bd prime`. See `bead-completion.mdc` for the full protocol.
+- Document session-relevant context in the scratchpad "Lessons" section. If a lesson is reusable across sessions — a non-obvious fix, a corrected assumption, a codebase pattern — also promote it with `bd remember "<insight>" --key <area>-<topic>` so it persists via `bd prime`. See `bead-completion.md` for the full protocol.
 
 ### When work can't proceed
 
@@ -103,7 +98,7 @@ After creation: `bd graph <epic-id>` to visualize and verify dependency order be
 When the Executor encounters an unexpected failure:
 
 1. **Build or test failure during implementation:** Stop, diagnose, fix. If the fix is outside the current bead's scope, create a new bead for it and mark the current bead blocked.
-2. **Tool failure** (`bd`, `git`, build tool): Check the error message. For beads: run `bd ping` first — if it fails, the database is unreachable. If `bd ping` succeeds, run `bd doctor --agent` for full diagnostics. If the tool is fundamentally broken, note it in "Executor's Feedback" and mark the bead blocked.
+2. **Tool failure** (`bd`, `git`, build tool): Check the error message. Run `bd doctor --agent` for beads issues. If the tool is fundamentally broken, note it in "Executor's Feedback" and mark the bead blocked.
 3. **Multiple failed approaches** (3+ distinct attempts): Stop implementing. Document what was tried and why each failed in `bd note <id> "..."`. Mark the bead blocked and escalate to the Planner — the approach or ACs may need revision.
 4. **Uncertain about correctness:** Do not ship code you're not confident in. Flag the uncertainty in "Executor's Feedback" with specific questions. It is better to ask than guess.
 
@@ -112,7 +107,7 @@ When the Executor encounters an unexpected failure:
 - **Beads (`bd`) is the single source of truth for task state.** Do not track tasks with markdown checkboxes.
 - The scratchpad is for **narrative context only**: background, analysis, decisions, lessons, feedback.
 - On new projects, check for `.beads/`. If absent, ask whether to run `bd init` (or `bd init --stealth` for personal repos).
-- **Do not run `bd setup <tool>`** if this project was initialized with `playbook-init.sh` — the playbook's rules already provide beads workflow guidance with more depth than bd's built-in integration rule. Running `bd setup` would add a redundant `beads.mdc`. Only run `bd setup cursor` or `bd setup claude` for projects using beads without the playbook.
+- **Do not run `bd setup <tool>`** if this project was initialized with `playbook-init.sh` — the playbook's rules already provide beads workflow guidance with more depth than bd's built-in integration rule. Running `bd setup` would add a redundant `beads.md`. Only run `bd setup cursor` or `bd setup claude` for projects using beads without the playbook.
 - Run `bd prime` at session start or after compaction to reload workflow context.
 
 ## Scratchpad Conventions
@@ -156,14 +151,11 @@ Before ending work:
 ## Finding and Filtering Beads
 
 - `bd ready` — blocker-aware ready work (the default starting point)
-- `bd ready --explain` — dependency-aware reasoning for why issues are ready or blocked
 - `bd list --status=open` — all open issues
 - `bd search "keyword"` — text search across titles and IDs
 - `bd query "status=open AND priority<=1 AND type=bug"` — structured query with AND/OR/NOT, parentheses, and date-relative expressions (e.g., `updated>7d`)
 - `bd blocked` — show all blocked issues
 - `bd count --by-status` — quick project metrics
-
-**Filtering:** `bd ready` and `bd list` accept `--exclude-type` and `--exclude-label` to omit issue types or labels from results (repeatable or comma-separated).
 
 **Machine-readable output:** `bd list` defaults to `--tree` (human-readable). When scripting or piping output, use `bd list --json` for JSON or `bd list --flat` for legacy flat format. Same applies to `bd ready --json`, `bd show <id> --json`, `bd blocked --json`.
 
@@ -201,7 +193,6 @@ When Jawnt MCP tools are available, agents have two ways to interact with beads.
 | Command | What it checks | Action on findings |
 |---------|---------------|-------------------|
 | `bd stale` | Beads with no activity for 7+ days | Defer, close as won't-do, or re-prioritize |
-| `bd prune --older-than 90d --dry-run` | Closed non-ephemeral beads older than a threshold (long-lived repos) | Preview bloat; use `--force` only after review — permanently deletes matching closed beads |
 | `bd orphans` | Beads referenced in commits but still open | Close with commit evidence, or update if incomplete |
 | `bd count --by-status` | Overall project health | Report to user if open count grows faster than closed |
 | `bd epic status <epic-id>` | Progress on the current epic | Note in scratchpad if approaching completion |

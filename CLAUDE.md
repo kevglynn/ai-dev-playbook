@@ -81,5 +81,6 @@ This repo's governance rules are in `.claude/rules/*.md` (auto-loaded by Claude 
 - **multi-agent-review** — review protocol for multi-agent workflows
 - **design-docs** — when and how to write design documents
 - **worktree-awareness** — git worktree conventions
+- **parallel-subagent-safety** — no foreground edits to files in a running subagent's blast radius
 
 **These rules are not optional.** When creating beads, closing beads, writing tests, or planning work, follow the standards in `.claude/rules/`. If unsure, read the relevant rule file before proceeding.
